@@ -1,0 +1,20 @@
+{
+  "pluginVersion": "2.0.4",
+  "builtAt": "2026-08-14T22:15:00+00:00",
+  "runtimeSource": "Business Directory Plugin published listings",
+  "restRoute": "/wp-json/opcd/v1/directory",
+  "sourceFile": "Ottawa-Primary-Care-Directory-CLEANED_16.html",
+  "sourceSha256": "bccaca84f77b219a599a9a5485d3aeabc9cc651f13758d6315dffa8c5e62b417",
+  "dataCompiled": "5 August 2026",
+  "counts": {
+    "specialistGroups": 40,
+    "specialistOccurrences": 819,
+    "uniqueSpecialists": 785,
+    "services": 2217,
+    "serviceSections": 27,
+    "faxEntries": 1156,
+    "routingEntries": 49,
+    "resourceSections": 11,
+    "formAgencies": 4
+  }
+}
