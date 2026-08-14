@@ -1,115 +1,85 @@
 # Ottawa Primary Care Directory — Developer Handoff
 
-## What to provide to the developer
+## Decision
 
-Provide either or both of these artifacts:
+The staging directory was migrated away from the bespoke Ottawa/Leaflet plugin and onto **Business Directory Plugin 6.4.26**, the public plugin Fred had already installed from WordPress.org.
 
-1. **Deployable WordPress plugin**: `build/ottawa-primary-care-directory-1.0.0.zip`
-2. **Full source handoff**: `build/ottawa-primary-care-directory-source-1.0.0.zip`
+This removes the custom PHP/JavaScript/Leaflet application from the active runtime. The public plugin owns listing storage, search, categories, CSV import/export, and backend editing. Breakdance owns presentation through a no-code single-listing template.
 
-Verify the hashes before deployment:
+The old custom plugin is deactivated but retained temporarily for rollback. It should not be deployed as the production solution.
 
-```bash
-shasum -a 256 build/ottawa-primary-care-directory-1.0.0.zip
-shasum -a 256 build/ottawa-primary-care-directory-source-1.0.0.zip
-```
-
-The deployable plugin hash is recorded in `STAGING-CHANGELOG.md`. Both final archive hashes are recorded in `build/SHA256SUMS.txt`. The full source archive contains the authoritative HTML, generator/validator, generated plugin, deployment runbook, and staging record.
-
-## Repository structure
+## Files to review
 
 ```text
 Monica/
-├── Ottawa-Primary-Care-Directory-CLEANED_16.html  # authoritative source
-├── ottawa-primary-care-directory/                 # deployable plugin source
-│   ├── ottawa-primary-care-directory.php          # shortcode and asset loading
-│   ├── templates/directory.php                     # accessible application shell
-│   ├── assets/css/directory.css                    # scoped theme integration
-│   ├── assets/js/directory.js                      # search, tabs, map, bilingual UI
-│   ├── assets/data/directory.json                  # generated directory dataset
-│   └── vendor/leaflet/                             # locally bundled map library
-├── tools/
-│   ├── build-wordpress-plugin.py
-│   ├── build-plugin-preview.py
-│   └── validate-wordpress-plugin.py
-├── STAGING-CHANGELOG.md
+├── Ottawa-Primary-Care-Directory-CLEANED_16.html
+├── migration/business-directory-plugin/
+│   ├── ottawa-primary-care-directory-bdp.csv
+│   ├── ottawa-primary-care-directory-bdp-pilot.csv
+│   ├── manifest.json
+│   ├── ADMIN-GUIDE.md
+│   └── API.md
+├── tools/build-business-directory-import.py
 ├── PRODUCTION-RUNBOOK.md
-└── DEVELOPER-HANDOFF.md
+├── STAGING-CHANGELOG.md
+└── ottawa-primary-care-directory/       # legacy rollback only
 ```
 
-The custom integration does not import listings into Business Directory Plugin and does not require listing-owner email addresses. It renders the authoritative dataset through `[ottawa_primary_care_directory]`.
+## WordPress configuration required
 
-## Add it to an existing WordPress codebase
+1. Install/activate `business-directory-plugin` from WordPress.org.
+2. In Directory → Directory Content → Form Fields:
+   - make Email optional;
+   - add optional **Fax**, type **Phone Number**, shortname `fax`;
+   - show Fax in excerpts and single listings and include it in search.
+3. Configure:
+   - listings per page: 25;
+   - comments: disabled;
+   - new/imported listing status: Published;
+   - edited listing status: Published;
+   - labels: Directory entry / Directory entries / Referral & Resource Directory;
+   - frontend submissions: disabled;
+   - Submit and Manage buttons: hidden;
+   - listing contact form: disabled.
+4. Import `ottawa-primary-care-directory-bdp.csv` once into an empty directory with:
+   - comma column separator;
+   - semicolon category separator;
+   - auto-create missing categories;
+   - email notifications disabled;
+   - batch size 40 (reduce if the host times out).
+5. Use `[businessdirectory]` on the existing `/business-directory/` page. Preserve the page ID, title, slug, template, publication status, translations, and menu relationships.
+6. In Breakdance, create a template applying only to the **Referral & Resource Directory** post type. Its content section contains:
+   - Post Title;
+   - Shortcode: `[businessdirectory-details]`.
+7. Keep the existing site-wide header item **Referral & Resource Directory** → `/business-directory/` and verify TranslatePress resolves the French route.
+8. Enable automatic updates for Business Directory Plugin, subject to the production team's managed-update policy.
 
-If the production WordPress codebase tracks `wp-content/plugins` in Git:
+## Data storage
 
-1. Copy the complete `ottawa-primary-care-directory/` directory to:
+Runtime data is in the WordPress database, not in this GitHub repository:
 
-   ```text
-   wp-content/plugins/ottawa-primary-care-directory/
-   ```
+- `wp_posts`: one row per listing with `post_type = wpbdp_listing`;
+- `wp_postmeta`: Business Directory field values such as phone, fax, email and address;
+- `wp_terms`, `wp_term_taxonomy`, `wp_term_relationships`: directory categories and tags;
+- Business Directory's own tables: plans/payments and plugin configuration where applicable;
+- `wp_options`: plugin settings.
 
-2. Commit the directory without changing its generated assets:
+`wp_` is the default prefix; the deployed database may use another prefix. The CSV in GitHub is a migration/source-control artifact, not a live database.
 
-   ```bash
-   git add wp-content/plugins/ottawa-primary-care-directory
-   git commit -m "Add Ottawa Primary Care Directory"
-   ```
+## Maintenance model
 
-3. Deploy through the website's normal pipeline.
-4. Activate after deployment:
+- Routine changes: WordPress Admin → Directory → Directory Content → Listings → search → Edit → Save.
+- New record: Directory → Directory Content → Listings → Add New Listing → complete the fields/category → Publish.
+- Bulk update: Directory → Import & Export → **Export**, include the plugin-generated unique IDs, edit the exported CSV without changing those IDs, then re-import.
 
-   ```bash
-   wp plugin activate ottawa-primary-care-directory
-   ```
+Do not use the clean-import CSV for an in-place refresh. Its deterministic source IDs are useful for provenance, but Business Directory Plugin 6.4.26 did not treat them as update keys when the same clean file was re-imported in staging. Only a plugin export supplies the canonical update identifiers for that site.
 
-If WordPress plugins are not stored in the code repository, use the tested ZIP instead:
+## Security and WordPress standards
 
-```bash
-wp plugin install /path/to/ottawa-primary-care-directory-1.0.0.zip --activate
-```
+The active solution is the maintained WordPress.org package rather than our custom plugin. Its listing model uses WordPress custom post types, taxonomies, capabilities and standard admin/REST surfaces. WordPress.org publication is not a substitute for Fred's normal production code/security review, but there is no longer any bespoke Leaflet runtime to maintain.
 
-The equivalent UI path is WordPress Admin → Plugins → Add Plugin → Upload Plugin.
+The staging site enables auto-updates for Business Directory Plugin. Production should follow the developer's established managed-update, backup and staging-validation policy.
 
-## Integrate it into the production page
+## Map limitation
 
-1. Follow the pre-deployment and backup checks in `PRODUCTION-RUNBOOK.md`.
-2. Create a draft QA page using the production site's normal page template.
-3. Add this exact page content:
-
-   ```html
-   <!-- wp:shortcode -->
-   [ottawa_primary_care_directory]
-   <!-- /wp:shortcode -->
-   ```
-
-4. Test English, French, known-result searches, Map, mobile, and desktop on the draft.
-5. Clone/back up the existing production Business Directory page.
-6. Replace only the existing page's content with the shortcode block. Preserve its title, slug, template, status, parent, and menu relationships.
-7. Purge page/Varnish/CDN caches and repeat public tests in an anonymous browser.
-8. Deactivate the legacy Business Directory Plugin only after confirming that no other production content uses it. Keep it installed during the rollback window.
-
-## Add public navigation
-
-Staging implements the public entry point in the active Breakdance **Site Header with Mega Menu** (staging header ID `252`), not in WordPress Appearance → Menus. Replicate this in the production header that is active everywhere:
-
-1. Open Breakdance → Headers and edit the active mega-menu header.
-2. In the Structure panel, expand **Menu Builder**.
-3. Duplicate the existing **Find a service** Menu Link so the new item inherits the established styling and mobile behavior.
-4. Set the duplicate's text to **Referral & Resource Directory** and its link to `/business-directory/`.
-5. Place it immediately before **Find a service** and save the header.
-6. In TranslatePress's visual Translation Editor, translate the new string to **Répertoire des orientations et des ressources**. TranslatePress should localize its destination to `/fr/business-directory/`.
-7. Verify the header on the English and French homepages, click both links, and check desktop and mobile navigation.
-
-Do not add a second copy to Appearance → Menus unless the production header actually uses a WordPress Menu element. A button on the **Primary care** page can be added later as a secondary entry point.
-
-## Updating the dataset later
-
-Replace the authoritative HTML file with the newly approved Monica version, then run:
-
-```bash
-python3 tools/build-wordpress-plugin.py
-python3 tools/validate-wordpress-plugin.py
-```
-
-Review count changes, increment the plugin version, build a new versioned ZIP, test on staging, and deploy through the same process. Do not hand-edit generated JSON unless the source file is corrected as well.
+Business Directory Plugin Lite does not provide the former Leaflet/OpenStreetMap map. The publisher's Maps module is a paid add-on and uses Google Maps/API keys. No license, paid module, or API key was purchased or added. If a map remains a requirement, Fred should choose either the supported paid module or an independently approved directory plugin after testing TranslatePress and location requirements.

@@ -1,77 +1,73 @@
 # Ottawa Primary Care Directory — Staging Change Record
 
-Date: 2026-08-13  
-Staging site: https://wordpress-403092-6560255.cloudwaysapps.com/  
-Public directory: https://wordpress-403092-6560255.cloudwaysapps.com/business-directory/
+Date: 2026-08-14
 
-## Authoritative source and build
+Staging: https://wordpress-403092-6560255.cloudwaysapps.com/
 
-- Source: `Ottawa-Primary-Care-Directory-CLEANED_16.html`
-- Source SHA-256: `bccaca84f77b219a599a9a5485d3aeabc9cc651f13758d6315dffa8c5e62b417`
-- WordPress plugin: Ottawa Primary Care Directory 1.0.0
-- Deployable ZIP: `build/ottawa-primary-care-directory-1.0.0.zip`
-- ZIP SHA-256: `a667d5028c3ebf8666c673a46d87b7ff02912750604af8f4499046a6739bd3c6`
-- Shortcode: `[ottawa_primary_care_directory]`
+Directory: https://wordpress-403092-6560255.cloudwaysapps.com/business-directory/
 
-The plugin was generated from the Monica source, not from the developer's earlier CSV. It keeps the directory dataset in a versioned static JSON file, scopes all CSS under `.ottrx`, uses the parent site's Breakdance typography and colour variables, and bundles Leaflet locally. OpenStreetMap tiles are requested only after a visitor opens the Map tab.
+## Final state
 
-## Staging changes made
+- Active directory engine: **Business Directory Plugin 6.4.26** (WordPress.org)
+- Public listings: **3,519**
+- Public page ID: `1941`
+- Public page shortcode: `[businessdirectory]`
+- Breakdance listing template: **Single Directory Entry**, ID `12517`
+- Superseded **Ottawa Primary Care Directory 1.0.0**: deactivated, not deleted
+- Business Directory Plugin auto-updates: enabled on staging
 
-1. Uploaded and activated **Ottawa Primary Care Directory 1.0.0**.
-2. Created draft QA page **Ottawa Primary Care Directory — Integration Preview**, page ID `1946`, containing the new shortcode. It remains a draft and does not appear in public navigation.
-3. Tested the draft in English and French before cutover.
-4. Cloned the existing **Business Directory** page as a rollback copy:
-   - public page ID: `1941`
-   - rollback draft page ID: `1948`
-   - original content: `[businessdirectory]`
-5. Replaced only the content of page `1941` with:
+## Changes made
 
-   ```text
-   <!-- wp:shortcode -->
-   [ottawa_primary_care_directory]
-   <!-- /wp:shortcode -->
-   ```
+1. Activated the already-installed public Business Directory Plugin.
+2. Made the plugin's Email field optional to accept legitimate records without email addresses.
+3. Added optional **Fax** as a Phone Number field (`fax`), visible in excerpts/listings and searchable.
+4. Configured 25 listings per page, no comments, Published defaults and directory-specific labels.
+5. Disabled frontend submissions, hid Submit/Manage buttons and disabled the listing-owner contact form. Admins remain able to add/edit records in the backend.
+6. Generated a seven-row pilot and a validated 3,519-row import from the latest Monica data.
+7. Test-imported the pilot: 7 accepted, 0 rejected; then verified a seven-record write/publish pilot.
+8. Imported the complete data set once into a clean published set: 3,519 accepted, 0 rejected.
+9. Changed page `1941` from `[ottawa_primary_care_directory]` to `[businessdirectory]`, preserving its URL, title and template.
+10. Created Breakdance template `12517` applying only to directory listings. It uses Post Title plus `[businessdirectory-details]`, so detail pages inherit the existing parent header/footer/design and render plugin-owned fields.
+11. Deactivated the custom Ottawa directory plugin and enabled auto-updates for Business Directory Plugin.
+12. Left the existing global header entry **Referral & Resource Directory** → `/business-directory/` in place.
 
-   The title, slug, published status, default page template, and `/business-directory/` URL were preserved.
-6. Deactivated **Business Directory Plugin 6.4.26** after the new page passed public checks. The plugin was not deleted, and its data was not modified or removed.
-7. Updated the active Breakdance header **Site Header with Mega Menu** (header ID `252`):
-   - duplicated the existing **Find a service** Menu Link so it inherited the established header styling and responsive behavior;
-   - changed the duplicate to **Referral & Resource Directory** → `/business-directory/`;
-   - placed it immediately before **Find a service** in the top-level header navigation;
-   - added the TranslatePress French translation **Répertoire des orientations et des ressources**; TranslatePress localizes the destination to `/fr/business-directory/`.
+No production site was changed. No paid plugin, Google Maps module, API key, user, unrelated content, footer, or other plugin was modified.
 
-The standard WordPress **Main Nav** menu was tested first, but the live Breakdance header does not consume that menu. The temporary menu item was removed, leaving the Breakdance header as the single active navigation implementation.
+## Import recovery record
 
-No global theme files, footer templates, users, listings, or unrelated pages/plugins were changed. Available Breakdance and TranslatePress updates were intentionally left untouched.
+During validation, the clean CSV was re-run with deterministic source `sequence_id` values. Business Directory Plugin did not treat those arbitrary values as update keys and created duplicates. All pilot/duplicate listings (7,045) were moved to normal WordPress Trash in exact ID batches; Trash was not emptied. The public set was then imported once from empty and verified at 3,519.
 
-## Verification completed
+This remains recoverable, but it uses database space. After Fred accepts staging and confirms the 3,519-record set, the developer may empty only the trashed `wpbdp_listing` records after taking a database backup.
 
-- Local generator and dataset validation passed.
-- JavaScript syntax validation passed.
-- Dataset counts: 785 unique specialists, 2,217 service listings, 1,156 fax entries, 27 service sections, 40 specialist groups in source data, 49 routing entries, 11 resource sections, and 4 form agencies.
-- English and French public routes load within the existing site header and footer.
-- English title: **Referral & Resource Directory**.
-- French title: **Répertoire des orientations et des ressources**.
-- Cardiology specialist search: 51 displayed table rows.
-- Diabetes service search: 107 displayed table rows.
-- Fax search `613-737-8944`: one correct Eastern Ontario MRI Central Intake result.
-- Map: 2,527 mappable records represented by 52 district markers; local Leaflet assets and OpenStreetMap attribution loaded correctly.
-- Responsive check at 390 px: no horizontal page overflow.
-- Desktop check at 1,280 px: no horizontal page overflow.
-- Final public browser console: no warnings or errors from the directory.
-- Anonymous cache-busting request returned the new plugin assets and no Business Directory Plugin assets.
-- A second full public acceptance run on 2026-08-13 reconfirmed all nine sections, the known-result searches, 52 map circles, 12 loaded map tiles, English/French routes, 390 px and 1,280 px layouts, the feedback email link, valid public JSON, and a clean browser console.
+For future in-place bulk updates, first export from that WordPress site with the plugin-generated unique IDs and re-import the edited export. Do not re-run the clean-import CSV over a populated directory.
 
-## Current public access
+## Verified counts
 
-The page is public at `/business-directory/` and `/fr/business-directory/`. The active Breakdance header now provides a visible, top-level link from the homepage and every page using that header. English and French labels and destinations were verified through anonymous cache-bypassing requests.
+| Type | Count |
+|---|---:|
+| Specialists | 785 |
+| Clinics & services | 2,217 |
+| Referral routes | 49 |
+| Central intakes | 9 |
+| Forms | 7 |
+| Resources | 435 |
+| Quick numbers | 17 |
+| **Published total** | **3,519** |
 
-## Rollback on staging
+Additional source fact: 1,685 imported listings contain a fax number. The source's 1,156-row fax lookup is represented as fields on related listings rather than extra duplicate listings.
 
-Fast rollback:
+## Verification results
 
-1. Edit page `1941` and restore its content to the original shortcode block using `[businessdirectory]`.
-2. Reactivate **Business Directory Plugin 6.4.26** from Plugins → Installed Plugins.
-3. Verify `/business-directory/` in English and French.
+- Public REST response: HTTP 200, `X-WP-Total: 3519`.
+- Main directory loads inside the parent Breakdance header/footer.
+- Public Add/Manage controls are absent.
+- Anonymous HTML does not expose Edit/Delete actions.
+- Search `Mitra Abaeian`: one result, correct specialist/category/address.
+- Detail record: correct title, category, description, phone `613 830-1771`, fax `613 837-3781`.
+- Listing contact form is absent.
+- Admin edit screen exposes title, Description, Phone (`listingfields[6]`) and Fax (`listingfields[11]`) and can save changes.
+- Custom plugin is inactive; Business Directory Plugin is active with automatic updates enabled.
 
-The draft clone at page `1948` is an additional copy of the pre-integration page. The Ottawa Primary Care Directory plugin can remain active during rollback because it has no effect on pages that do not contain its shortcode.
+## Known limitation
+
+The free plugin does not reproduce the former Leaflet/OpenStreetMap map. The publisher's supported Maps module is paid and requires Google Maps API keys. No purchase or key was added. Search, categories, listings, fax data, admin editing and REST listing reads are available without that module.
