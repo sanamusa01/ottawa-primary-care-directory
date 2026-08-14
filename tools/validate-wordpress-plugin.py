@@ -91,7 +91,7 @@ def main() -> None:
         fail("Breakdance design-system adapter is missing")
     if php.count("add_shortcode( 'ottawa_primary_care_directory'") != 1:
         fail("Shortcode registration is missing or duplicated")
-    if "Version: 2.0.4" not in php or "Requires Plugins: business-directory-plugin" not in php:
+    if "Version: 2.1.6" not in php or "Requires Plugins: business-directory-plugin" not in php:
         fail("Hybrid plugin version or Business Directory dependency is missing")
     if "rest_url( OPCD_BDP_Data_Adapter::REST_NAMESPACE" not in php:
         fail("Shortcode is not connected to the Business Directory data adapter")
@@ -103,6 +103,10 @@ def main() -> None:
         fail("Adapter is not restricted to published listings")
     if "save_post_wpbdp_listing" not in adapter or "delete_transient" not in adapter:
         fail("Adapter cache invalidation is incomplete")
+    if "build_map_rows" not in adapter or "mapPlaced" not in adapter or "mapUnplaced" not in adapter:
+        fail("Complete published-listing map coverage is missing")
+    if "DATA.mapRows" not in javascript or "data-unplaced" not in javascript:
+        fail("Map cannot expose located and unplaced records")
     if re.search(r"register_rest_route[\s\S]{0,500}WP_REST_Server::(?:CREATABLE|EDITABLE|DELETABLE)", adapter):
         fail("Adapter exposes a mutating REST route")
     if ".ottrx--wordpress .ottrx__lang{display:none}" in css:
