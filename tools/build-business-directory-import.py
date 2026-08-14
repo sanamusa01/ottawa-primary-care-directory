@@ -121,14 +121,23 @@ def build_records(data: dict[str, Any]) -> tuple[list[dict[str, str]], Counter[s
     rows: list[dict[str, str]] = []
     counts: Counter[str] = Counter()
 
-    seen_specialists: set[tuple[str, str, str, str]] = set()
+    specialist_records: dict[tuple[str, str, str, str], dict[str, str]] = {}
     for group in data.get("specialists", []):
         group_name = clean(group.get("group"))
         for item in group.get("rows", []):
             key = tuple(clean(item.get(k)).casefold() for k in ("name", "site", "phone", "fax"))
-            if key in seen_specialists:
+            if key in specialist_records:
+                existing = specialist_records[key]
+                categories = existing["listing_category"].split(";")
+                if group_name and group_name not in categories:
+                    categories.append(group_name)
+                    existing["listing_category"] = ";".join(categories)
+                tags = existing["listing_tags"].split(";") if existing["listing_tags"] else []
+                for value in (group_name, clean(item.get("sub")), clean(item.get("langs"))):
+                    if value and value not in tags:
+                        tags.append(value)
+                existing["listing_tags"] = ";".join(tags)
                 continue
-            seen_specialists.add(key)
             details = detail_lines(
                 [
                     ("Specialty", group_name),
@@ -139,8 +148,7 @@ def build_records(data: dict[str, Any]) -> tuple[list[dict[str, str]], Counter[s
                     ("Languages", item.get("langs")),
                 ]
             )
-            rows.append(
-                record(
+            specialist_records[key] = record(
                     title=item.get("name"),
                     categories=("Specialists", group_name),
                     short=" · ".join(filter(None, [group_name, clean(item.get("sub")), clean(item.get("site"))])),
@@ -152,8 +160,9 @@ def build_records(data: dict[str, Any]) -> tuple[list[dict[str, str]], Counter[s
                     postal=item.get("fsa"),
                     sequence_id=stable_id("specialist", *key),
                 )
-            )
             counts["specialists"] += 1
+
+    rows.extend(specialist_records.values())
 
     category_names = data.get("catNames", [])
     for item in data.get("svcRows", []):
@@ -322,7 +331,7 @@ def validate(rows: list[dict[str, str]]) -> None:
 def write_csv(path: Path, rows: list[dict[str, str]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8-sig", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=HEADERS, extrasaction="ignore")
+        writer = csv.DictWriter(handle, fieldnames=HEADERS, extrasaction="ignore", lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
 
@@ -357,6 +366,7 @@ def main() -> int:
         "counts": dict(sorted(counts.items())),
         "pilot_listings": len(pilot),
         "notes": [
+            "Cross-specialty physician occurrences are merged into one listing with multiple specialty categories.",
             "Fax is a custom optional Phone Number field with shortname 'fax'.",
             "Email is optional; do not fabricate listing-owner email addresses.",
             "Fax lookup is represented by the fax field on provider/service listings, not duplicate fax-only listings.",
