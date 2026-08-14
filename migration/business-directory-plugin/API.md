@@ -31,6 +31,12 @@ geography used by the public interface. The response identifies its source
 with `X-OPCD-Source: business-directory-plugin` and is cached for five minutes;
 listing/category/tag changes invalidate the server cache.
 
+The payload includes `mapRows`, one compact searchable projection for each
+published listing. `meta.mapCount`, `meta.mapPlaced`, and `meta.mapUnplaced`
+report full map-search coverage, records with supported public postal
+locations, and records retained in the no-public-location group respectively.
+The current staging values are 3,519, 2,582, and 937.
+
 This is a public directory dataset. It must not be extended to private
 metadata, draft records, or unauthenticated writes.
 
