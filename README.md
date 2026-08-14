@@ -1,39 +1,80 @@
 # Ottawa Primary Care Directory
 
-Migration package for the Ottawa OHT-ÉSO **Referral & Resource Directory**.
+Hybrid WordPress implementation of the Ottawa OHT-ÉSO **Referral & Resource
+Directory**.
 
-The production target is the public [Business Directory Plugin](https://wordpress.org/plugins/business-directory-plugin/) for WordPress. The bespoke Leaflet plugin in `ottawa-primary-care-directory/` is retained only as a documented legacy rollback artifact and must not be activated for the new integration.
+The active architecture deliberately separates content management from public
+presentation:
 
-## Current integration
+- [Business Directory Plugin](https://wordpress.org/plugins/business-directory-plugin/)
+  owns the 3,519 editable WordPress listings, categories, fields, permissions,
+  and CSV import/export.
+- `ottawa-primary-care-directory/` is a read-only presentation adapter that
+  restores the purpose-built Ottawa directory interface while reading current
+  published Business Directory records.
+- Breakdance and the parent WordPress site supply the global header, footer,
+  fonts, and design system.
 
-- WordPress plugin: Business Directory Plugin 6.4.26 (WordPress.org)
-- Public page shortcode: `[businessdirectory]`
+## Current staging integration
+
+- Business Directory Plugin: **6.4.26**, active with automatic updates enabled
+- Ottawa Directory Presentation Adapter: **2.0.4**, active
+- Public page shortcode: `[ottawa_primary_care_directory]`
 - Public URL: `/business-directory/`
-- Listings: 3,519
-- Source of truth: `ottawa-primary-care-directory/assets/data/directory.json`, generated from `Ottawa-Primary-Care-Directory-CLEANED_16.html`
-- Import file: `migration/business-directory-plugin/ottawa-primary-care-directory-bdp.csv`
+- Published WordPress listings: **3,519**
+- Read-only presentation endpoint: `/wp-json/opcd/v1/directory`
+- Production site: unchanged
+
+## Public feature set
+
+- Search Everything
+- Referral Routes and central intake
+- Postal-district map with service filtering and directions
+- Specialist roster with specialty and language filters
+- Clinics/services with section, category, location, and OHT filters
+- Fax lookup
+- Forms
+- Resources
+- Quick numbers
+- English/French interface controls
+- Feedback/correction links
+- Phone-format and accent-insensitive search
+- Structured cards, tables, badges, verification notices, and mobile layouts
+
+## Staging screenshots
+
+The first image is the final hybrid directory. The second shows the restored
+postal-district map. A screenshot of the temporary generic Business Directory
+frontend is retained under `docs/screenshots/` for comparison.
+
+![Hybrid directory on staging](docs/screenshots/after-hybrid-directory.jpg)
+
+![Restored directory map on staging](docs/screenshots/after-hybrid-map.jpg)
 
 ## Repository map
 
-- `DEVELOPER-HANDOFF.md` — production handoff and architectural decisions
-- `PRODUCTION-RUNBOOK.md` — safe production migration and rollback
-- `STAGING-CHANGELOG.md` — exact changes made in staging
-- `migration/business-directory-plugin/ADMIN-GUIDE.md` — routine admin editing and new-record workflow
-- `migration/business-directory-plugin/API.md` — WordPress REST API inventory and limitations
-- `tools/build-business-directory-import.py` — deterministic CSV generator and validation
-- `ottawa-primary-care-directory/` — deprecated custom-plugin rollback source; not the production target
+- `DEVELOPER-HANDOFF.md` — architecture, responsibilities, and production handoff
+- `PRODUCTION-RUNBOOK.md` — safe installation, acceptance, and rollback
+- `STAGING-CHANGELOG.md` — exact staging changes and verification results
+- `migration/business-directory-plugin/` — clean CSVs, admin guide, and API notes
+- `ottawa-primary-care-directory/` — deployable read-only presentation adapter
+- `tools/build-business-directory-import.py` — validated Business Directory CSV generator
+- `tools/validate-wordpress-plugin.py` — presentation adapter structural validation
 
-## Rebuild the clean-import CSV
+## Build and validation
 
 ```bash
 python3 tools/build-business-directory-import.py
+python3 tools/validate-wordpress-plugin.py
 ```
 
-The generator validates unique source identifiers, required fields, and record counts. The clean-import CSV is for an empty directory. Do **not** re-import it over an already populated site: for safe bulk updates, first export that site's listings with Business Directory Plugin's generated `sequence_id` values, edit the export, and re-import it.
+The clean CSV is only for an empty directory. For in-place bulk updates, first
+export the target WordPress directory with Business Directory Plugin's own
+generated `sequence_id` values, edit that export, and re-import it.
 
 ## Record totals
 
-| Type | Listings |
+| Type | Published WordPress listings |
 |---|---:|
 | Specialists | 785 |
 | Clinics & services | 2,217 |
@@ -44,4 +85,15 @@ The generator validates unique source identifiers, required fields, and record c
 | Quick numbers | 17 |
 | **Total** | **3,519** |
 
-Fax data is stored on its related listing rather than as duplicate fax-only listings. Email is optional because 1,813 valid source records do not contain an email address.
+The designed specialist roster has 819 specialty appearances for 785 unique
+physicians because some physicians belong to multiple specialty groups. The
+fax lookup contains 1,151 service fax entries plus five separately verified
+intake/form destinations.
+
+## Maintenance boundary
+
+The presentation adapter has no public write operations, user accounts,
+payments, or custom database tables. It does contain site-specific PHP,
+JavaScript, CSS, and locally bundled Leaflet 1.9.4. The production owner must
+review that small presentation layer and its Leaflet dependency through the
+normal managed-update and staging-test process.

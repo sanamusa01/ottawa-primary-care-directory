@@ -1,75 +1,92 @@
 # Ottawa Primary Care Directory — Production Runbook
 
-This runbook migrates production to the same public-plugin implementation tested in staging.
+This runbook reproduces the tested hybrid staging implementation. It does not
+authorize production work; the production owner should execute it after review.
 
 ## 1. Preflight and backup
 
-1. Take a production database and files backup and confirm restoration access.
-2. Record the current `/business-directory/` page ID, content, slug, template, status, translations and menu/header relationships.
-3. Export any existing Business Directory Plugin listings if production already contains data.
-4. Confirm Business Directory Plugin and Breakdance versions are compatible with the production WordPress/PHP versions.
-5. Perform the work in a maintenance window and keep production caches/CDN controls available.
+1. Back up the production database and `wp-content`; verify restore access.
+2. Record the current `/business-directory/` page ID, content, slug, template,
+   status, translations, and global menu/header relationships.
+3. Export existing Business Directory data if production already contains it.
+4. Confirm WordPress 6.3+, PHP 7.4+, Breakdance, TranslatePress, and Business
+   Directory compatibility.
+5. Review the adapter PHP/JS/CSS and locally bundled Leaflet 1.9.4.
+6. Perform the cutover in a maintenance window with cache/CDN controls ready.
 
-## 2. Configure Business Directory Plugin
+## 2. Configure the content engine
 
-1. Install/activate the public `business-directory-plugin` package.
-2. Apply every setting and field listed in `DEVELOPER-HANDOFF.md`.
-3. Run the seven-row pilot file in **Test Import** mode. Require 7 accepted / 0 rejected.
-4. If the production directory is empty, import the full 3,519-row CSV exactly once.
-5. Verify the published listing total is 3,519 before changing the public page.
+1. Install and activate Business Directory Plugin.
+2. Apply every field and setting in `DEVELOPER-HANDOFF.md`.
+3. Run the seven-row pilot in **Test Import** mode; require 7 accepted / 0 rejected.
+4. Import the 3,519-row full CSV exactly once into an empty directory.
+5. Confirm the published total is 3,519 before changing the public page.
 
-## 3. Theme integration
+## 3. Install the presentation adapter
 
-1. Create a Breakdance template named **Single Directory Entry**.
-2. Apply it only to the **Referral & Resource Directory** post type.
-3. Add one section containing:
-   - Post Title;
-   - a Shortcode element with `[businessdirectory-details]`.
-4. Use the site's global Breakdance section/typography settings; do not add a separate frontend theme framework.
-5. Test a listing detail page before publishing the directory page.
+1. Upload `build/ottawa-directory-presentation-adapter-2.0.4.zip`.
+2. Confirm WordPress reports Business Directory Plugin as its dependency.
+3. Activate **Ottawa Directory Presentation Adapter**.
+4. Request `/wp-json/opcd/v1/directory` and require HTTP 200,
+   `X-OPCD-Source: business-directory-plugin`, and the expected counts.
 
 ## 4. Reversible page cutover
 
-1. Clone or otherwise preserve the current directory page as an unpublished rollback copy.
-2. Edit the existing public page; do not create a replacement URL.
-3. Preserve its title, slug, status, template, parent and translations.
-4. Replace only the page content with:
+1. Preserve the current page content/revision at the unchanged public URL.
+2. Replace only the page content with:
 
    ```html
    <!-- wp:shortcode -->
-   [businessdirectory]
+   [ottawa_primary_care_directory]
    <!-- /wp:shortcode -->
    ```
 
-5. Confirm the active Breakdance header contains **Referral & Resource Directory** → `/business-directory/` and the French route works.
-6. Purge WordPress, Varnish and CDN caches.
+3. Preserve page ID, title, slug, status, template, author, parent, translations,
+   and menu/header relationships.
+4. Keep **Referral & Resource Directory** → `/business-directory/` in the
+   active global header.
+5. Purge WordPress, Varnish, and CDN caches.
 
 ## 5. Acceptance tests
 
-- `GET /wp-json/wp/v2/wpbdp_listing?per_page=1` returns HTTP 200 and `X-WP-Total: 3519`.
-- `/business-directory/` loads inside the parent header/footer.
-- Search `Mitra Abaeian` returns exactly one result.
-- The result displays phone `613 830-1771` and fax `613 837-3781`.
-- Its detail page displays the correct title, category, description, phone, fax and parent-site footer.
-- Public Add/Manage buttons and the contact form are absent.
-- An anonymous request does not expose Edit/Delete actions.
-- `/fr/business-directory/` loads and preserves the French header/navigation.
+- Business Directory REST: HTTP 200 and `X-WP-Total: 3519`.
+- Adapter REST: HTTP 200; 785 unique specialists, 819 specialty appearances,
+  2,217 services, 49 routes, 9 intakes, 7 forms, 435 resources, 17 quick
+  numbers, and 1,156 fax entries.
+- Parent header/footer and Ottawa styling appear on `/business-directory/`.
+- Every tab renders: Search Everything, Referral Routes, Map, Specialists,
+  Clinics & Services, Fax Lookup, Forms, Resources, Quick Numbers.
+- Search `Mitra Abaeian` returns one result with `613 830-1771`.
+- Fax search `613-737-8944` returns Eastern Ontario MRI Central Intake.
+- Map shows Ottawa postal-district circles, area counts, filtering, directions,
+  Leaflet attribution, and OpenStreetMap attribution.
+- Specialist specialty/language and service section/category/location filters work.
+- English/French interface controls work; `/fr/business-directory/` retains the
+  French parent navigation.
+- Feedback links open a correction email that warns against patient information.
 - Mobile and desktop layouts have no horizontal overflow.
-- WordPress Admin → Directory → Directory Content → Listings exposes searchable/editable records.
+- No browser console errors occur during tab/map interaction.
+- WordPress administrators can search, edit, add, publish, unpublish, and delete
+  records through **Directory → Directory Content → Listings**.
+- Anonymous users see no Edit/Delete controls or public mutation endpoints.
 
-## 6. Retire the old custom plugin
+## 6. Rollback
 
-After all tests pass, deactivate **Ottawa Primary Care Directory**. Do not delete it until the organization accepts production and the rollback window ends. Enable/confirm the production team's update policy for Business Directory Plugin.
+1. Restore the prior page revision/content at the unchanged URL.
+2. Deactivate **Ottawa Directory Presentation Adapter** if the rollback no
+   longer uses its shortcode.
+3. Leave Business Directory listings intact until the problem is understood.
+4. Purge caches and repeat the previous implementation's smoke tests.
+5. The pre-hybrid version is retained in
+   `build/rollback-ottawa-primary-care-directory-1.0.0.zip`.
 
-## Rollback
+## Ongoing maintenance
 
-1. Restore the saved page content or rollback clone at the unchanged public URL.
-2. Reactivate the prior custom plugin only if the rollback content uses `[ottawa_primary_care_directory]`.
-3. Purge caches and repeat the prior implementation's smoke tests.
-4. Do not delete imported Business Directory listings during rollback; hide/deactivate the public integration until the cause is understood.
-
-## Later data changes
-
-- Single record: edit in WordPress Admin; see `migration/business-directory-plugin/ADMIN-GUIDE.md`.
-- Bulk update: export from the target site with Business Directory's unique IDs, edit the export, test it on staging, then re-import.
-- Complete rebuild: regenerate the clean-import CSV, import it only into an empty directory/database copy, and test before cutover.
+- Content: WordPress administrators through Business Directory.
+- Business Directory updates: production team's managed plugin process.
+- Adapter compatibility: test after WordPress, PHP, Breakdance, TranslatePress,
+  or Business Directory upgrades.
+- Leaflet: review for supported releases/security advisories at least quarterly
+  and before major production upgrades.
+- Data: test bulk exports/imports on staging; never import the clean CSV over a
+  populated directory.
