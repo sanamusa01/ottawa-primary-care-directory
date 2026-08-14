@@ -24,7 +24,7 @@ authorize production work; the production owner should execute it after review.
 
 ## 3. Install the presentation adapter
 
-1. Upload `build/ottawa-directory-presentation-adapter-2.0.4.zip`.
+1. Upload `build/ottawa-directory-presentation-adapter-2.1.6.zip`.
 2. Confirm WordPress reports Business Directory Plugin as its dependency.
 3. Activate **Ottawa Directory Presentation Adapter**.
 4. Request `/wp-json/opcd/v1/directory` and require HTTP 200,
@@ -60,6 +60,13 @@ authorize production work; the production owner should execute it after review.
 - Fax search `613-737-8944` returns Eastern Ontario MRI Central Intake.
 - Map shows Ottawa postal-district circles, area counts, filtering, directions,
   Leaflet attribution, and OpenStreetMap attribution.
+- Map reports 3,519 searchable listings, with 2,582 represented by supported
+  public postal-location markers and 937 in the separate no-public-location
+  results group.
+- Typing `abortion` offers **All matching listings for “abortion” — 20** as the
+  first suggestion and keeps **All 20** selected after clicking it.
+- Selecting **Pregnancy options & abortion — what each service states** shows
+  14 results: 11 mapped and 3 explicitly listed without a public map location.
 - Specialist specialty/language and service section/category/location filters work.
 - English/French interface controls work; `/fr/business-directory/` retains the
   French parent navigation.

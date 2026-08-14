@@ -18,7 +18,7 @@ presentation:
 ## Current staging integration
 
 - Business Directory Plugin: **6.4.26**, active with automatic updates enabled
-- Ottawa Directory Presentation Adapter: **2.0.4**, active
+- Ottawa Directory Presentation Adapter: **2.1.6**, active
 - Public page shortcode: `[ottawa_primary_care_directory]`
 - Public URL: `/business-directory/`
 - Published WordPress listings: **3,519**
@@ -29,7 +29,9 @@ presentation:
 
 - Search Everything
 - Referral Routes and central intake
-- Postal-district map with service filtering and directions
+- Complete map search across all 3,519 published records, with postal-district
+  markers, service filtering, directions, and a separate transparent list for
+  online, confidential-location, or addressless records
 - Specialist roster with specialty and language filters
 - Clinics/services with section, category, location, and OHT filters
 - Fax lookup
@@ -89,6 +91,11 @@ The designed specialist roster has 819 specialty appearances for 785 unique
 physicians because some physicians belong to multiple specialty groups. The
 fax lookup contains 1,151 service fax entries plus five separately verified
 intake/form destinations.
+
+The Map tab searches all 3,519 published records. Of those, 2,582 have a
+supported public postal location and appear in district markers; 937 remain
+searchable under **records without a public map location**. This avoids both
+missing resources and inventing locations for confidential or online services.
 
 ## Maintenance boundary
 

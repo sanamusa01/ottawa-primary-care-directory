@@ -3,7 +3,7 @@
 ## Final architectural decision
 
 Staging uses **Business Directory Plugin 6.4.26** as the maintained content and
-administration engine, plus **Ottawa Directory Presentation Adapter 2.0.4** as
+administration engine, plus **Ottawa Directory Presentation Adapter 2.1.6** as
 a read-only public presentation layer.
 
 This hybrid approach preserves the backend Fred requested while restoring the
@@ -55,7 +55,7 @@ Monica/
 4. Import `migration/business-directory-plugin/ottawa-primary-care-directory-bdp.csv`
    once into an empty directory: comma columns, semicolon categories,
    auto-create categories, notifications off, batch size 40.
-5. Install and activate `build/ottawa-directory-presentation-adapter-2.0.4.zip`.
+5. Install and activate `build/ottawa-directory-presentation-adapter-2.1.6.zip`.
    WordPress will treat Business Directory Plugin as a required dependency.
 6. Use `[ottawa_primary_care_directory]` on the existing
    `/business-directory/` page. Preserve the page ID, slug, status, template,
@@ -79,6 +79,21 @@ adapter inside the parent page template.
 - Caches the transformed result for five minutes and invalidates the cache when
   a listing is saved, deleted, recategorized, or retagged.
 - Registers no public write route and creates no database tables.
+
+### Map coverage model
+
+The endpoint includes one compact `mapRows` entry for every published Business
+Directory listing, not only specialists and clinics. The current staging
+payload contains 3,519 searchable rows: 2,582 have a supported public postal
+location and contribute to district markers, while 937 are available through
+the clearly labelled **records without a public map location** result group.
+Resources with an explicit confidential, unpublished, virtual, or no-walk-in
+location are never assigned a guessed marker.
+
+For regression testing, typing `abortion` must offer **All matching listings
+for “abortion” — 20** before narrower category matches. The curated **Pregnancy
+options & abortion — what each service states** category contains 14 records:
+11 mapped and 3 without a public map location.
 
 ## Data storage
 

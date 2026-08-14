@@ -7,7 +7,7 @@ Staging directory: https://wordpress-403092-6560255.cloudwaysapps.com/business-d
 ## Final state
 
 - Content engine: **Business Directory Plugin 6.4.26**, active
-- Presentation: **Ottawa Directory Presentation Adapter 2.0.4**, active
+- Presentation: **Ottawa Directory Presentation Adapter 2.1.6**, active
 - Published listings: **3,519**
 - Public page ID: `1941`
 - Public shortcode: `[ottawa_primary_care_directory]`
@@ -28,7 +28,7 @@ Staging directory: https://wordpress-403092-6560255.cloudwaysapps.com/business-d
 6. Initially tested the plugin's standard `[businessdirectory]` output; it
    preserved the data but did not preserve the designed interface or map.
 7. Converted the former standalone plugin into **Ottawa Directory Presentation
-   Adapter 2.0.4**, a read-only layer powered by published Business Directory
+   Adapter**, a read-only layer powered by published Business Directory
    listings.
 8. Replaced the page shortcode with `[ottawa_primary_care_directory]` while
    preserving its URL, title, page ID, template, status, and header link.
@@ -41,6 +41,14 @@ Staging directory: https://wordpress-403092-6560255.cloudwaysapps.com/business-d
 11. Restored cross-specialty physician appearances and the original 1,156-entry
     fax lookup.
 12. Left the existing global header link `/business-directory/` in place.
+13. Expanded the Map tab index from the two original listing types to every
+    published Business Directory listing, including Resources, Referral Routes,
+    Forms, Central Intakes, and Quick Numbers.
+14. Added a Resources & other map segment and a separate result group for
+    online, confidential-location, and addressless records.
+15. Added conservative location matching, the verified adjacent J8Z district,
+    and an explicit all-matches autocomplete choice so narrow legacy category
+    labels do not hide broader search results.
 
 No paid module, Google Maps key, user account, unrelated page, footer, or
 production site was changed.
@@ -66,8 +74,15 @@ production site was changed.
 - Adapter REST: HTTP 200, expected counts, read-only GET, published records only.
 - Parent header/footer and design tokens render correctly.
 - Search `Mitra Abaeian`: one result with correct specialty, location, and phone.
-- Map: Leaflet and OpenStreetMap load with 2,527 mapped specialty/service
-  appearances, postal-district circles, filters, and area counts.
+- Map: all 3,519 published listings are searchable; 2,582 listings with
+  supported public postal locations contribute to postal-district markers and
+  937 appear in the separate no-public-location result group.
+- Map search `abortion`: first suggestion is **All matching listings for
+  “abortion” — 20**; selecting it leaves All 20 active (16 mapped and 4 without
+  a public map location).
+- Curated category **Pregnancy options & abortion — what each service states**:
+  14 results, with 11 mapped and 3 transparently listed without a public map
+  location.
 - Specialists: 785 unique physicians, 819 specialty appearances, 39 populated
   groups, specialty and language filters.
 - Fax `613-737-8944`: Eastern Ontario MRI Central Intake.
