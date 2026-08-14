@@ -30,6 +30,7 @@
   },
   "pilot_listings": 7,
   "notes": [
+    "Cross-specialty physician occurrences are merged into one listing with multiple specialty categories.",
     "Fax is a custom optional Phone Number field with shortname 'fax'.",
     "Email is optional; do not fabricate listing-owner email addresses.",
     "Fax lookup is represented by the fax field on provider/service listings, not duplicate fax-only listings.",
