@@ -253,6 +253,7 @@
 .ottrx__segdot--both{background:linear-gradient(135deg,#2A9D8F 0 50%,#E08E45 50% 100%)}
 .ottrx__segdot--spec{background:#2A9D8F}
 .ottrx__segdot--svc{background:#E08E45}
+.ottrx__segdot--other{background:#7C3AED}
 .ottrx__segn{font-size:12px;font-variant-numeric:tabular-nums;color:var(--ott-muted);
   background:var(--ott-surface-2);border-radius:99px;padding:1px 7px;min-width:22px;text-align:center}
 .ottrx__seg input:checked + .ottrx__segopt .ottrx__segn{background:var(--ott-surface-2);color:var(--ott-secondary)}
@@ -271,6 +272,8 @@
 .ottrx__areabtn:hover{background:var(--ott-surface);color:var(--ott-accent)}
 .ottrx__areabtn--all{font-weight:600;color:var(--ott-accent);background:var(--ott-surface)}
 .ottrx__areabtn--all:hover{background:var(--ott-surface-2)}
+.ottrx__areabtn--unplaced{background:#FAF7FF;color:#5B21B6}
+.ottrx__areabtn--unplaced:hover{background:#F3E8FF;color:#4C1D95}
 .ottrx__arean{font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ott-muted);
   background:var(--ott-surface-2);border-radius:99px;padding:2px 9px}
 .ottrx__back{font:inherit;font-size:12px;font-weight:500;cursor:pointer;background:none;border:0;
@@ -324,6 +327,7 @@
 .ottrx__hit:last-child{border-bottom:0}
 .ottrx__hitname{font-weight:600;color:var(--ott-primary);margin:0 0 2px;font-size:14px}
 .ottrx__hitmeta{color:var(--ott-muted);margin:0 0 2px}
+.ottrx__hitmeta--unplaced{color:#6D28D9;font-weight:500}
 .ottrx__hitlinks{display:flex;gap:var(--ott-s3);flex-wrap:wrap;margin-top:var(--ott-s2)}
 .ottrx__hitlinks a{font-size:12px}
 .ottrx__legend{display:flex;flex-wrap:wrap;gap:var(--ott-s4);align-items:center;
