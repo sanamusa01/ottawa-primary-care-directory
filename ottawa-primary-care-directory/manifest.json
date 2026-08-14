@@ -1,6 +1,6 @@
 {
-  "pluginVersion": "2.0.4",
-  "builtAt": "2026-08-14T22:15:00+00:00",
+  "pluginVersion": "2.1.6",
+  "builtAt": "2026-08-14T23:26:52+00:00",
   "runtimeSource": "Business Directory Plugin published listings",
   "restRoute": "/wp-json/opcd/v1/directory",
   "sourceFile": "Ottawa-Primary-Care-Directory-CLEANED_16.html",

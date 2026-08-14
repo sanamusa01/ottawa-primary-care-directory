@@ -22,7 +22,10 @@ published in the directory.
 
 - Search Everything
 - Referral Routes and central intake
-- Postal-district map with service filtering and directions
+- Complete directory search from the Map tab, with postal-district markers for
+  every record that has a supported public location
+- A separate results view for online, confidential-location, or addressless
+  records that cannot be placed honestly on a physical map
 - Specialist roster with specialty and language filters
 - Clinics and services with section, category, location, and OHT filters
 - Fax lookup
@@ -50,6 +53,12 @@ queries published Business Directory listings and overlays their current
 titles, fields, descriptions, categories, and tags. Deleted or unpublished
 WordPress listings disappear from the public presentation; new listings are
 added to the appropriate section based on their Business Directory category.
+
+The map receives one compact row for every published listing. Specialists,
+clinics, and resources with a supported postal district receive approximate
+district markers. Referral routes, online services, confidential locations,
+and records without a public postal code remain searchable in the same Map tab
+under a clearly labelled non-map-location results group.
 
 The public endpoint is:
 
