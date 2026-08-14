@@ -15,7 +15,7 @@ defined( 'ABSPATH' ) || exit;
 final class OPCD_BDP_Data_Adapter {
 	const REST_NAMESPACE = 'opcd/v1';
 	const REST_ROUTE     = '/directory';
-	const CACHE_KEY      = 'opcd_bdp_directory_v2_0_3';
+	const CACHE_KEY      = 'opcd_bdp_directory_v2_1_6';
 	const CACHE_TTL      = 5 * MINUTE_IN_SECONDS;
 
 	/**
@@ -163,6 +163,23 @@ final class OPCD_BDP_Data_Adapter {
 		$data['catNames'] = array_values( $category_names );
 		$data['catIds']   = array_values( $category_ids );
 		$data['fax']      = self::build_fax_index( $data['svcRows'], $baseline );
+		if ( ! isset( $data['fsaGeo']['J8Z'] ) ) {
+			$data['fsaGeo']['J8Z'] = array(
+				'lat'  => 45.4659,
+				'lon'  => -75.7379,
+				'name' => 'Hull / Saint-Joseph',
+				'area' => 'Gatineau',
+			);
+		}
+		$data['mapRows'] = self::build_map_rows( $records, isset( $data['fsaGeo'] ) ? $data['fsaGeo'] : array() );
+
+		$map_geo     = isset( $data['fsaGeo'] ) ? $data['fsaGeo'] : array();
+		$mapped_rows = array_filter(
+			$data['mapRows'],
+			function ( $row ) use ( $map_geo ) {
+				return ! empty( $row['fsa'] ) && isset( $map_geo[ $row['fsa'] ] );
+			}
+		);
 
 		$data['meta']['specCount']   = self::specialist_unique_count( $data['specialists'] );
 		$data['meta']['specGroups']  = count( $data['specialists'] );
@@ -171,6 +188,9 @@ final class OPCD_BDP_Data_Adapter {
 		$data['meta']['svcSource']   = count( $data['svcRows'] );
 		$data['meta']['svcSections'] = count( $data['services'] );
 		$data['meta']['faxCount']    = count( $data['fax'] );
+		$data['meta']['mapCount']    = count( $data['mapRows'] );
+		$data['meta']['mapPlaced']   = count( $mapped_rows );
+		$data['meta']['mapUnplaced'] = count( $data['mapRows'] ) - count( $mapped_rows );
 		$data['meta']['runtime']     = 'Business Directory Plugin';
 
 		return $data;
@@ -801,6 +821,170 @@ final class OPCD_BDP_Data_Adapter {
 			}
 		}
 		return '';
+	}
+
+	/**
+	 * Build one compact map/search row for every published Business Directory
+	 * listing. A row does not need a public location to remain discoverable in
+	 * the map tab; rows with a supported postal district also receive a marker.
+	 *
+	 * @param array $records Published directory records.
+	 * @param array $fsa_geo Supported postal-district geography.
+	 * @return array
+	 */
+	private static function build_map_rows( $records, $fsa_geo ) {
+		$rows             = array();
+		$address_index    = array();
+		$title_index      = array();
+		$supported_fsa    = is_array( $fsa_geo ) ? array_fill_keys( array_keys( $fsa_geo ), true ) : array();
+
+		foreach ( $records as $record ) {
+			$row    = self::make_map_row( $record );
+			$rows[] = $row;
+
+			if ( empty( $row['fsa'] ) || ! isset( $supported_fsa[ $row['fsa'] ] ) ) {
+				continue;
+			}
+			$address_key = self::map_address_key( $row['geo'] );
+			if ( $address_key ) {
+				$address_index[ $address_key ][ $row['fsa'] ] = true;
+			}
+			foreach ( self::map_title_keys( $row['name'] ) as $title_key ) {
+				$title_index[ $title_key ][ $row['fsa'] ] = true;
+			}
+		}
+
+		foreach ( $rows as &$row ) {
+			if ( ! empty( $row['fsa'] ) && isset( $supported_fsa[ $row['fsa'] ] ) ) {
+				continue;
+			}
+
+			$candidates  = array();
+			$address_key = self::map_address_key( $row['geo'] );
+			if ( $address_key && isset( $address_index[ $address_key ] ) ) {
+				$candidates = array_keys( $address_index[ $address_key ] );
+			}
+			if ( 1 !== count( $candidates ) && ! self::map_address_is_nonpublic( $row['geo'] ) ) {
+				$candidates = array();
+				foreach ( self::map_title_keys( $row['name'] ) as $title_key ) {
+					if ( isset( $title_index[ $title_key ] ) ) {
+						$candidates = array_values( array_unique( array_merge( $candidates, array_keys( $title_index[ $title_key ] ) ) ) );
+					}
+				}
+			}
+			if ( 1 === count( $candidates ) ) {
+				$row['fsa']      = $candidates[0];
+				$row['inferred'] = true;
+			}
+		}
+		unset( $row );
+
+		usort( $rows, array( __CLASS__, 'compare_name' ) );
+		return $rows;
+	}
+
+	/**
+	 * Convert one published listing into the compact map-search schema.
+	 *
+	 * @param array $record Business Directory record.
+	 * @return array
+	 */
+	private static function make_map_row( $record ) {
+		$type       = self::record_type( $record['categories'] );
+		$details    = self::parse_details( $record['description'] );
+		$type_names = array(
+			'specialist' => 'Specialist',
+			'service'    => 'Clinic or service',
+			'intake'     => 'Central intake',
+			'route'      => 'Referral route',
+			'form'       => 'Form',
+			'resource'   => 'Resource',
+			'quick'      => 'Quick number',
+		);
+		$generic = array( 'specialists', 'clinics services', 'referral routes', 'central intake', 'forms', 'resources', 'quick numbers' );
+		$cats    = array();
+		foreach ( $record['categories'] as $category ) {
+			if ( ! in_array( self::normalize( $category ), $generic, true ) ) {
+				$cats[] = $category;
+			}
+		}
+		$cats = array_values( array_unique( $cats ) );
+		if ( ! $cats ) {
+			$cats[] = isset( $type_names[ $type ] ) ? $type_names[ $type ] : 'Directory listing';
+		}
+
+		$address = self::field_value( $record, 'address' );
+		if ( '' === $address ) {
+			$address = self::detail( $details, 'Address', self::detail( $details, 'Location', '' ) );
+		}
+		$postal = self::field_value( $record, 'zip_code' );
+		$phone  = self::field_or_detail( $record, 'phone', $details, 'Phone', '' );
+		$web    = self::field_or_detail( $record, 'website', $details, 'Website', '' );
+		$short  = self::short_description( $record, '' );
+		$body   = wp_strip_all_tags( (string) $record['description'] );
+		$search = implode( ' ', array_merge( $cats, $record['tags'], array( $short, wp_html_excerpt( $body, 700, '' ) ) ) );
+
+		return array(
+			'wpId'    => (int) $record['id'],
+			'kind'    => 'specialist' === $type ? 'spec' : ( 'service' === $type ? 'svc' : 'other' ),
+			'type'    => $type,
+			'name'    => $record['title'],
+			'cat'     => $cats[0],
+			'catList' => $cats,
+			'phone'   => $phone,
+			'web'     => $web,
+			'url'     => '',
+			'geo'     => $address,
+			'meta'    => $address ? $address : ( isset( $type_names[ $type ] ) ? $type_names[ $type ] : 'Directory listing' ),
+			'fsa'     => self::postal_district( $postal, $address ),
+			'search'  => $search,
+		);
+	}
+
+	/**
+	 * Normalize an address for conservative cross-record postal inference.
+	 *
+	 * @param string $address Address text.
+	 * @return string
+	 */
+	private static function map_address_key( $address ) {
+		$address = (string) $address;
+		if ( self::map_address_is_nonpublic( $address ) ) {
+			return '';
+		}
+		$address = preg_replace( '/\b[A-Z]\d[A-Z]\s*\d[A-Z]\d\b/i', ' ', $address );
+		$key     = self::normalize( $address );
+		$tokens  = array_values( array_filter( explode( ' ', $key ) ) );
+		$tokens  = array_values( array_diff( $tokens, array( 'ottawa', 'ontario', 'on', 'canada' ) ) );
+		$tokens  = array_map(
+			function ( $token ) {
+				$abbreviations = array( 'street' => 'st', 'road' => 'rd', 'avenue' => 'ave', 'boulevard' => 'blvd' );
+				return isset( $abbreviations[ $token ] ) ? $abbreviations[ $token ] : $token;
+			},
+			$tokens
+		);
+		$key     = implode( ' ', $tokens );
+		return strlen( $key ) >= 8 ? $key : '';
+	}
+
+	private static function map_address_is_nonpublic( $address ) {
+		return (bool) preg_match( '/no public|not published|national service|online only|virtual|confidential location/i', (string) $address );
+	}
+
+	/**
+	 * Return exact and conservative base-title keys for location matching.
+	 *
+	 * @param string $title Listing title.
+	 * @return array
+	 */
+	private static function map_title_keys( $title ) {
+		$keys = array( self::normalize( $title ) );
+		$base = preg_replace( '/\s*(?:[—–]|\(|\s-\s).*$/u', '', (string) $title );
+		$base = self::normalize( $base );
+		if ( $base && strlen( $base ) >= 8 ) {
+			$keys[] = $base;
+		}
+		return array_values( array_unique( array_filter( $keys ) ) );
 	}
 
 	private static function postal_district( $postal, $address = '' ) {
