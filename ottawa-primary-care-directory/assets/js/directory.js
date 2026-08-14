@@ -89,8 +89,10 @@
                      'Essayez un terme plus court, un nom de spécialité (« cardiologie »), une clinique (« Bruyère ») ou un préfixe téléphonique (« 613-721 »). Vous pouvez aussi effacer la recherche et utiliser le filtre par catégorie.'],
 
     'map.title':    ['Map', 'Carte'],
-    'map.blurb':    ['listings placed by postal district across the Ottawa region. Circle size reflects how many listings sit in that district.',
-                     'fiches réparties par secteur postal dans la région d’Ottawa. La taille du cercle indique le nombre de fiches dans ce secteur.'],
+    'map.blurb':    ['listings with public postal locations appear as district markers. Circle size reflects how many listings sit in that district.',
+                     'fiches ayant un secteur postal public apparaissent sous forme de repères. La taille du cercle indique le nombre de fiches dans ce secteur.'],
+    'map.searchable':['published listings are searchable here, including online and confidential-location resources.',
+                     'fiches publiées peuvent être recherchées ici, y compris les ressources en ligne ou dont l’adresse est confidentielle.'],
     'map.warn':     ['<strong>Markers are approximate.</strong> Each circle sits at the centre of a postal district (the first three characters of the postal code), not at a street address. Use it to see roughly where care is concentrated — not to navigate. Every listing in the side panel has a <em>Directions</em> link that opens its full address in Google Maps, which is the number to trust.',
                      '<strong>Les repères sont approximatifs.</strong> Chaque cercle se trouve au centre d’un secteur postal (les trois premiers caractères du code postal), et non à une adresse civique. Servez-vous-en pour voir où les services se concentrent — pas pour vous y rendre. Chaque fiche du panneau latéral comporte un lien <em>Itinéraire</em> qui ouvre l’adresse complète dans Google Maps : c’est celle-là qui fait foi.'],
     'map.ph':       ['Filter by service provided — physiotherapy, food bank, cardiology, wound care…',
@@ -101,7 +103,9 @@
     'map.suggestaria': ['Matching services', 'Services correspondants'],
     'map.suggestcount': ['matching services. Use the arrow keys to choose one.',
                          'services correspondants. Utilisez les flèches pour en choisir un.'],
+    'map.searchall': ['All matching listings for', 'Toutes les fiches correspondant à'],
     'map.all':      ['All', 'Tout'],
+    'map.other':    ['Resources & other', 'Ressources et autres'],
     'map.shown':    ['shown', 'affichées'],
     'map.loading':  ['Loading map…', 'Chargement de la carte…'],
     'map.loading2': ['If it does not appear, the area list will be shown instead.',
@@ -111,6 +115,8 @@
     'map.choose':   ['Choose an area', 'Choisissez un secteur'],
     'map.choosehint':['Pick an area below, or click a circle on the map.', 'Choisissez un secteur ci-dessous ou cliquez sur un cercle de la carte.'],
     'map.showall':  ['Show all', 'Afficher les'],
+    'map.unplaced': ['Online, confidential location, or no public postal code', 'En ligne, adresse confidentielle ou aucun secteur postal public'],
+    'map.showunplaced':['Show records without a public map location', 'Afficher les fiches sans emplacement public sur la carte'],
     'map.allareas': ['All areas', 'Tous les secteurs'],
     'map.backareas':['← All areas', '← Tous les secteurs'],
     'map.backto':   ['← Back to areas', '← Retour aux secteurs'],
@@ -128,6 +134,7 @@
     'directions':   ['Directions', 'Itinéraire'],
     'website':      ['Website', 'Site Web'],
     'call':         ['Call', 'Appeler'],
+    'viewlisting':  ['View directory record', 'Voir la fiche du répertoire'],
     'listing':      ['listing', 'fiche'],
     'listings':     ['listings', 'fiches'],
 
@@ -944,12 +951,27 @@
   var LEAFLET_CSS = root.getAttribute('data-leaflet-css');
   var LEAFLET_JS = root.getAttribute('data-leaflet-js');
   var mapState = { loaded: false, failed: false, map: null, layer: null,
-                   fsa: null, area: null, all: false, type: '', q: '', qLabel: '' };
+                   fsa: null, area: null, all: false, unplaced: false, type: '', q: '', qLabel: '' };
 
-  // Flatten every record that has a usable Ottawa-region postal district.
+  // One row per published WordPress listing. Rows without a public postal
+  // location stay searchable and are shown separately from physical markers.
   var POINTS = null;
   function points() {
     if (POINTS) return POINTS;
+    if (Array.isArray(DATA.mapRows)) {
+      POINTS = DATA.mapRows.map(function (r) {
+        return {
+          k: r.kind || 'other', type: r.type || '', fsa: r.fsa || '',
+          cat: r.cat || '', cats: (r.catList || []).join(' '), catList: r.catList || [],
+          name: r.name || '', org: r.org || '', meta: r.meta || '', phone: r.phone || '',
+          geo: r.geo || '', web: r.web || '', url: r.url || '', wpId: r.wpId || 0,
+          search: r.search || '', inferred: !!r.inferred
+        };
+      });
+      return POINTS;
+    }
+
+    // Backward-compatible fallback for payloads generated before mapRows.
     POINTS = [];
     DATA.specialists.forEach(function (g) {
       g.rows.forEach(function (r) {
@@ -972,11 +994,17 @@
     return POINTS;
   }
 
+  function hasMapLocation(p) { return !!(p && p.fsa && DATA.fsaGeo[p.fsa]); }
+  function locatedRows(rows) { return rows.filter(hasMapLocation); }
+  function pointBlob(p) {
+    return p._b || (p._b = withDigits(norm(
+      [p.name, p.org, p.cat, p.cats, p.meta, p.phone, p.search].join(' '))));
+  }
+
   function mapFiltered(q) {
     return points().filter(function (p) {
       if (mapState.type && p.k !== mapState.type) return false;
-      var blob = p._b || (p._b = withDigits(norm(
-        [p.name, p.org, p.cat, p.cats, p.meta, p.phone].join(' '))));
+      var blob = pointBlob(p);
       if (q && !matches(blob, q)) return false;               // global search box
       if (mapState.q && !matches(blob, mapState.q)) return false;  // this tab's own box
       return true;
@@ -1006,10 +1034,20 @@
   // No truncation: an alphabetical list that stops at "A" is useless. The panel
   // is height-capped and scrolls instead, so every match stays reachable.
   function suggestFor(text) {
-    var q = norm(text.trim());
-    return mapSuggestions()
+    var raw = text.trim();
+    var q = norm(raw);
+    var suggestions = mapSuggestions()
       .filter(function (o) { return !q || o.k.indexOf(q) > -1; })
       .sort(byName);
+    if (q) {
+      var allCount = points().filter(function (p) {
+        return (!mapState.type || p.k === mapState.type) && matches(pointBlob(p), q);
+      }).length;
+      if (allCount) {
+        suggestions.unshift({ name: raw, label: t('map.searchall') + ' “' + raw + '”', n: allCount, k: q });
+      }
+    }
+    return suggestions;
   }
 
   function gmaps(p) {
@@ -1018,8 +1056,10 @@
   }
 
   function hitHtml(p) {
-    var links = '<a href="' + esc(gmaps(p)) + '" target="_blank" rel="noopener noreferrer">' + t('directions') + '</a>';
+    var publicAddress = p.geo && !/(no public|not published|national service|online only|virtual)/i.test(p.geo);
+    var links = publicAddress ? '<a href="' + esc(gmaps(p)) + '" target="_blank" rel="noopener noreferrer">' + t('directions') + '</a>' : '';
     if (p.web && safeUrl(p.web)) links += link(p.web, t('website'));
+    else if (p.url && safeUrl(p.url)) links += link(p.url, t('viewlisting'));
     else if (p.id) links += link(hlUrl(p.id), t('svc.viewhl2'));
     if (p.phone) {
       var tel = p.phone.split('/')[0].replace(/[^0-9+]/g, '');
@@ -1029,8 +1069,9 @@
       '<p class="ottrx__hitname">' + esc(p.name) + '</p>' +
       '<p class="ottrx__hitmeta">' + esc(p.cat) + '</p>' +
       (p.meta ? '<p class="ottrx__hitmeta">' + esc(p.meta) + '</p>' : '') +
+      (!hasMapLocation(p) ? '<p class="ottrx__hitmeta ottrx__hitmeta--unplaced">' + esc(t('map.unplaced')) + '</p>' : '') +
       (p.phone ? '<p class="ottrx__hitmeta">' + esc(p.phone) + '</p>' : '') +
-      '<div class="ottrx__hitlinks">' + links + '</div></div>';
+      (links ? '<div class="ottrx__hitlinks">' + links + '</div>' : '') + '</div>';
   }
 
   function areaOf(fsa) { return (DATA.fsaGeo[fsa] || {}).area || 'Other'; }
@@ -1058,12 +1099,14 @@
     var side = panelEl.querySelector('[data-mapside]');
     if (!side) return;
     var rows = mapFiltered(q);
+    var located = locatedRows(rows);
+    var unplaced = rows.filter(function (p) { return !hasMapLocation(p); });
     var term = mapState.qLabel || mapState.q || q;
 
     // ---- a postal district is selected ----
     if (mapState.fsa && DATA.fsaGeo[mapState.fsa]) {
       var g = DATA.fsaGeo[mapState.fsa];
-      var hits = rows.filter(function (p) { return p.fsa === mapState.fsa; });
+      var hits = located.filter(function (p) { return p.fsa === mapState.fsa; });
       side.innerHTML = '<div class="ottrx__mapsidehead">' +
         '<button type="button" class="ottrx__back" data-area="' + esc(g.area) + '">&larr; ' + esc(g.area) + ' ' + t('map.ottawa') + '</button>' +
         '<h4>' + esc(g.name) + '</h4>' +
@@ -1076,7 +1119,7 @@
 
     // ---- an area is selected: its districts, then its listings ----
     if (mapState.area) {
-      var inArea = rows.filter(function (p) { return areaOf(p.fsa) === mapState.area; });
+      var inArea = located.filter(function (p) { return areaOf(p.fsa) === mapState.area; });
       var dist = {};
       inArea.forEach(function (p) { dist[p.fsa] = (dist[p.fsa] || 0) + 1; });
       var dkeys = Object.keys(dist).sort(function (a, b) { return dist[b] - dist[a]; });
@@ -1094,6 +1137,16 @@
       return;
     }
 
+    // ---- records that are searchable but cannot honestly receive a marker ----
+    if (mapState.unplaced) {
+      side.innerHTML = '<div class="ottrx__mapsidehead">' +
+        '<button type="button" class="ottrx__back" data-area="">' + t('map.backto') + '</button>' +
+        '<h4>' + t('map.unplaced') + '</h4><p>' + unplaced.length + ' listing' + (unplaced.length === 1 ? '' : 's') +
+        (term ? ' matching “' + esc(term) + '”' : '') + '</p></div>' + sideList(unplaced, 200);
+      side.scrollTop = 0;
+      return;
+    }
+
     // ---- nothing selected: pick an area, or show everything ----
     if (mapState.all) {
       side.innerHTML = '<div class="ottrx__mapsidehead">' +
@@ -1105,13 +1158,15 @@
     }
 
     var areas = {};
-    rows.forEach(function (p) { var a = areaOf(p.fsa); areas[a] = (areas[a] || 0) + 1; });
+    located.forEach(function (p) { var a = areaOf(p.fsa); areas[a] = (areas[a] || 0) + 1; });
     var akeys = Object.keys(areas).sort(function (a, b) { return areas[b] - areas[a]; });
     side.innerHTML = '<div class="ottrx__mapsidehead"><h4>' + t('map.choose') + '</h4>' +
       '<p>' + rows.length + ' listing' + (rows.length === 1 ? '' : 's') +
       (term ? ' matching “' + esc(term) + '”' : '') + '. ' + t('map.choosehint') + '</p></div>' +
       (rows.length ? '<button type="button" class="ottrx__areabtn ottrx__areabtn--all" data-showall="1">' +
         t('map.showall') + ' ' + rows.length + ' ' + (rows.length === 1 ? t('listing') : t('listings')) + '</button>' : '') +
+      (unplaced.length ? '<button type="button" class="ottrx__areabtn ottrx__areabtn--unplaced" data-unplaced="1">' +
+        '<span>' + t('map.showunplaced') + '</span><span class="ottrx__arean">' + unplaced.length + '</span></button>' : '') +
       (akeys.length ? akeys.map(function (a) {
         return '<button type="button" class="ottrx__areabtn" data-area="' + esc(a) + '">' +
                '<span>' + esc(a) + ' Ottawa</span><span class="ottrx__arean">' + areas[a] + '</span></button>';
@@ -1125,12 +1180,12 @@
     if (mapState.layer) mapState.map.removeLayer(mapState.layer);
     mapState.layer = L.layerGroup().addTo(mapState.map);
     var by = {};
-    mapFiltered(q).forEach(function (p) {
-      (by[p.fsa] = by[p.fsa] || { spec: 0, svc: 0 })[p.k]++;
+    locatedRows(mapFiltered(q)).forEach(function (p) {
+      (by[p.fsa] = by[p.fsa] || { spec: 0, svc: 0, other: 0 })[p.k]++;
     });
     Object.keys(by).forEach(function (fsa) {
-      var g = DATA.fsaGeo[fsa], c = by[fsa], total = c.spec + c.svc;
-      var dominant = c.spec >= c.svc ? '#0369A1' : '#0891B2';
+      var g = DATA.fsaGeo[fsa], c = by[fsa], total = c.spec + c.svc + c.other;
+      var dominant = c.other >= c.spec && c.other >= c.svc ? '#7C3AED' : (c.spec >= c.svc ? '#0369A1' : '#0891B2');
       L.circleMarker([g.lat, g.lon], {
         radius: Math.max(9, Math.min(34, 7 + Math.sqrt(total) * 3.1)),
         color: '#fff', weight: 2, fillColor: dominant, fillOpacity: .78
@@ -1140,6 +1195,7 @@
           mapState.fsa = fsa;
           mapState.area = (DATA.fsaGeo[fsa] || {}).area || null;
           mapState.all = false;
+          mapState.unplaced = false;
           renderSide(state.q);
         });
     });
@@ -1184,7 +1240,7 @@
   }
 
   function areaFallback(q) {
-    var rows = mapFiltered(q), byArea = {};
+    var rows = locatedRows(mapFiltered(q)), byArea = {};
     rows.forEach(function (p) {
       var a = DATA.fsaGeo[p.fsa].area;
       (byArea[a] = byArea[a] || {})[p.fsa] = (byArea[a][p.fsa] || 0) + 1;
@@ -1203,9 +1259,9 @@
   }
 
   function typeCounts(q) {
-    var c = { '': 0, spec: 0, svc: 0 };
+    var c = { '': 0, spec: 0, svc: 0, other: 0 };
     points().forEach(function (p) {
-      var blob = p._b || (p._b = withDigits(norm([p.name, p.org, p.cat, p.cats, p.meta, p.phone].join(' '))));
+      var blob = pointBlob(p);
       if (q && !matches(blob, q)) return;
       if (mapState.q && !matches(blob, mapState.q)) return;
       c['']++; c[p.k]++;
@@ -1218,7 +1274,8 @@
     var opts = [
       { v: '',     label: t('map.all'),      dot: 'both', n: c[''] },
       { v: 'spec', label: t('tab.spec'),     dot: 'spec', n: c.spec },
-      { v: 'svc',  label: t('tab.svc'),      dot: 'svc',  n: c.svc }
+      { v: 'svc',  label: t('tab.svc'),      dot: 'svc',  n: c.svc },
+      { v: 'other',label: t('map.other'),     dot: 'other', n: c.other }
     ];
     return '<div class="ottrx__seg" role="group" aria-label="' + t('map.showgroup') + '">' +
       opts.map(function (o, i) {
@@ -1242,9 +1299,10 @@
 
   function renderMap(q) {
     var rows = mapFiltered(q);
-    var mapped = points().length;
+    var allRows = points();
+    var mapped = locatedRows(allRows).length;
     var h = '<div class="ottrx__panelhead"><h2 class="ottrx__h2">' + t('map.title') + '</h2>' +
-      '<p class="ottrx__blurb">' + mapped + ' ' + t('map.blurb') + '</p></div>';
+      '<p class="ottrx__blurb">' + mapped + ' ' + t('map.blurb') + ' ' + allRows.length + ' ' + t('map.searchable') + '</p></div>';
     h += '<div class="ottrx__mapsearchwrap">' +
       '<svg class="ottrx__searchicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
         'stroke-linecap="round" aria-hidden="true" focusable="false">' +
@@ -1484,7 +1542,7 @@
     e.list.innerHTML = sgItems.map(function (o, i) {
       return '<li class="ottrx__suggestopt' + (i === sgIndex ? ' is-active' : '') + '" role="option" ' +
         'id="ottrx-sg-' + i + '" aria-selected="' + (i === sgIndex) + '" data-sg="' + esc(o.name) + '">' +
-        '<span class="ottrx__suggestname">' + esc(o.name) + '</span>' +
+        '<span class="ottrx__suggestname">' + esc(o.label || o.name) + '</span>' +
         '<span class="ottrx__suggestn">' + o.n + '</span></li>';
     }).join('');
     if (sgIndex >= 0) {
@@ -1525,7 +1583,7 @@
   function refreshMap() {
     // reset the drill-down first: it must happen whether or not the map object
     // exists, otherwise a new search leaves you stranded in the old area view
-    mapState.fsa = null; mapState.area = null; mapState.all = false;
+    mapState.fsa = null; mapState.area = null; mapState.all = false; mapState.unplaced = false;
     if (mapState.failed || !mapState.map) { render(); return; }
     drawMarkers(state.q);
     renderSide(state.q);
@@ -1534,7 +1592,7 @@
     var cl = panelEl.querySelector('[data-mapclear]');
     if (cl) cl.classList.toggle('is-on', !!mapState.q);
     var tc = typeCounts(state.q);
-    var m = { all: '', spec: 'spec', svc: 'svc' };
+    var m = { all: '', spec: 'spec', svc: 'svc', other: 'other' };
     Object.keys(m).forEach(function (k) {
       var el = panelEl.querySelector('[data-segcount="' + k + '"]');
       if (el) el.textContent = tc[m[k]];
@@ -1579,7 +1637,10 @@
   });
   panelEl.addEventListener('mousedown', function (e) {
     var li = e.target.closest && e.target.closest('[data-sg]');
-    if (li) { e.preventDefault(); sgPick(li.getAttribute('data-sg')); }
+    // Keep focus in the combobox, but wait for the real click before removing
+    // the option. Mutating on mousedown can redirect the click to a control
+    // that appears underneath the old option.
+    if (li) e.preventDefault();
   });
   document.addEventListener('click', function (e) {
     if (!sgOpen) return;
@@ -1605,14 +1666,19 @@
     if (sel) sel.focus();
   });
   panelEl.addEventListener('click', function (e) {
+    var suggestion = e.target.closest('[data-sg]');
+    if (suggestion) { e.preventDefault(); sgPick(suggestion.getAttribute('data-sg')); return; }
     var sa = e.target.closest('[data-showall]');
-    if (sa) { mapState.all = true; mapState.area = null; mapState.fsa = null; renderSide(state.q); return; }
+    if (sa) { mapState.all = true; mapState.unplaced = false; mapState.area = null; mapState.fsa = null; renderSide(state.q); return; }
+    var up = e.target.closest('[data-unplaced]');
+    if (up) { mapState.unplaced = true; mapState.all = false; mapState.area = null; mapState.fsa = null; renderSide(state.q); return; }
     var ab = e.target.closest('[data-area]');
     if (ab) {
       var av = ab.getAttribute('data-area');
       mapState.area = av || null;
       mapState.fsa = null;
       mapState.all = false;
+      mapState.unplaced = false;
       renderSide(state.q);
       if (mapState.map && av) fitArea(av);
       return;
@@ -1623,6 +1689,7 @@
       mapState.fsa = fv;
       mapState.area = (DATA.fsaGeo[fv] || {}).area || null;
       mapState.all = false;
+      mapState.unplaced = false;
       renderSide(state.q);
       var gg = DATA.fsaGeo[fv];
       if (mapState.map && gg) mapState.map.setView([gg.lat, gg.lon], 12);
