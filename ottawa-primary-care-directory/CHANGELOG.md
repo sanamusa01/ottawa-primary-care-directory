@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.2.0 — 2026-08-14
+
+- Made **All locations** the explicit default for Clinics & Services so all
+  published service records appear unless a visitor narrows the scope.
+- Deduplicated the all-sections Clinics & Services view while retaining every
+  listing in each relevant section.
+- Removed record totals from the main Specialists, Clinics & Services, and Fax
+  Lookup tab labels, from unfiltered specialist/service panels, and from map
+  filter suggestions/segments.
+- Removed the requested map coverage statement from the visible interface.
+- Added Dr. Danielle Gervais to the Family Medicine specialist group using the
+  same public fields as the existing physician roster.
+
 ## 2.1.6 — 2026-08-14
 
 - Completed map autocomplete selection on click so the event cannot be redirected to a filter beneath the suggestion list.

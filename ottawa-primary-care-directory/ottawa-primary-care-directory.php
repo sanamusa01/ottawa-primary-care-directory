@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Ottawa Directory Presentation Adapter
  * Description: Read-only Ottawa OHT directory interface powered by Business Directory Plugin listings.
- * Version: 2.1.6
+ * Version: 2.2.0
  * Author: Ottawa OHT-ÉSO
  * Text Domain: ottawa-primary-care-directory
  * Requires at least: 6.3
@@ -12,7 +12,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'OPCD_VERSION', '2.1.6' );
+define( 'OPCD_VERSION', '2.2.0' );
 define( 'OPCD_FILE', __FILE__ );
 define( 'OPCD_DIR', plugin_dir_path( __FILE__ ) );
 define( 'OPCD_URL', plugin_dir_url( __FILE__ ) );
