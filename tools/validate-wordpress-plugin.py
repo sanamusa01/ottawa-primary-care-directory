@@ -91,7 +91,7 @@ def main() -> None:
         fail("Breakdance design-system adapter is missing")
     if php.count("add_shortcode( 'ottawa_primary_care_directory'") != 1:
         fail("Shortcode registration is missing or duplicated")
-    if "Version: 2.2.0" not in php or "Requires Plugins: business-directory-plugin" not in php:
+    if "Version: 2.3.1" not in php or "Requires Plugins: business-directory-plugin" not in php:
         fail("Hybrid plugin version or Business Directory dependency is missing")
     if "rest_url( OPCD_BDP_Data_Adapter::REST_NAMESPACE" not in php:
         fail("Shortcode is not connected to the Business Directory data adapter")
@@ -121,6 +121,21 @@ def main() -> None:
         fail("Specialist aggregate count is still displayed in the panel header")
     if "if (q || state.svc || state.leaf || state.scope !== 'all')" not in javascript:
         fail("Unfiltered Clinics & Services aggregate count is still displayed")
+    if "<caption>' + t('all.what')" in javascript:
+        fail("Search Everything still renders the What lives where table")
+    if "g.count + ')" in javascript or "DATA.meta.specGroups + ')" in javascript:
+        fail("Specialist dropdown still exposes record counts")
+    if "function publicLabel" not in javascript or "ottrx__resourcegrid" not in javascript:
+        fail("Count-free resource explorer is missing")
+    if "fullDetails(r, q)" in javascript or "ottrx__details" in css:
+        fail("Clinics & Services still exposes the long Full details disclosure")
+    if "replace(/(^|[^-])\\s*--\\s*([^-]|$)/g, '$1 – $2')" not in javascript:
+        fail("Public double-hyphen punctuation normalization is missing")
+    allied = [row for row in data["svcRows"] if row.get("_src") == "Google Docs — Ressource list — Allied Health tabs"]
+    if len(allied) != 59 or any(row.get("healthline") is not False for row in allied):
+        fail("Allied Health additions are incomplete or incorrectly labelled as Healthline records")
+    if data["meta"].get("alliedHealthEnriched") != 11 or len(data["svcRows"]) != 2276:
+        fail("Allied Health merge totals are incorrect")
     if '<span class="n">' in template:
         fail("Static template still shows tab totals before JavaScript loads")
     danielle = [row for row in specialist_rows if row.get("_cpso") == "75041"]

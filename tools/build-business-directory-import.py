@@ -349,12 +349,15 @@ def main() -> int:
     args.output_dir.mkdir(parents=True, exist_ok=True)
     full_path = args.output_dir / "ottawa-primary-care-directory-bdp.csv"
     pilot_path = args.output_dir / "ottawa-primary-care-directory-bdp-pilot.csv"
+    allied_health_path = args.output_dir / "allied-health-new-listings-2026-08-14.csv"
     manifest_path = args.output_dir / "manifest.json"
 
     write_csv(full_path, rows)
     pilot_types = ["opc-specialist-", "opc-service-", "opc-route-", "opc-intake-", "opc-form-", "opc-resource-", "opc-quick-"]
     pilot = [next(row for row in rows if row["sequence_id"].startswith(prefix)) for prefix in pilot_types]
     write_csv(pilot_path, pilot)
+    allied_health = [row for row in rows if row["sequence_id"].startswith("opc-service-allied-")]
+    write_csv(allied_health_path, allied_health)
 
     manifest = {
         "source": str(args.source.relative_to(ROOT)),
@@ -365,6 +368,7 @@ def main() -> int:
         "total_listings": len(rows),
         "counts": dict(sorted(counts.items())),
         "pilot_listings": len(pilot),
+        "allied_health_new_listings": len(allied_health),
         "notes": [
             "Cross-specialty physician occurrences are merged into one listing with multiple specialty categories.",
             "Fax is a custom optional Phone Number field with shortname 'fax'.",
@@ -372,6 +376,7 @@ def main() -> int:
             "Fax lookup is represented by the fax field on provider/service listings, not duplicate fax-only listings.",
             "sequence_id is a deterministic source identifier for traceability only.",
             "Do not re-import this clean file over a populated directory. Export the target site with plugin-generated unique IDs and edit that export for in-place updates.",
+            "allied-health-new-listings-2026-08-14.csv contains only the 59 net-new Allied Health clinics and is safe for a one-time append import after duplicate review.",
         ],
     }
     manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
