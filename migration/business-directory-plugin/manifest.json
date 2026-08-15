@@ -1,6 +1,6 @@
 {
   "source": "ottawa-primary-care-directory/assets/data/directory.json",
-  "source_compiled": "5 August 2026",
+  "source_compiled": "14 August 2026",
   "plugin": "Business Directory Plugin",
   "plugin_slug": "business-directory-plugin",
   "csv_headers": [
@@ -18,10 +18,10 @@
     "username",
     "sequence_id"
   ],
-  "total_listings": 3520,
+  "total_listings": 3579,
   "counts": {
     "central_intakes": 9,
-    "clinics_services": 2217,
+    "clinics_services": 2276,
     "forms": 7,
     "quick_numbers": 17,
     "referral_routes": 49,
@@ -29,12 +29,14 @@
     "specialists": 786
   },
   "pilot_listings": 7,
+  "allied_health_new_listings": 59,
   "notes": [
     "Cross-specialty physician occurrences are merged into one listing with multiple specialty categories.",
     "Fax is a custom optional Phone Number field with shortname 'fax'.",
     "Email is optional; do not fabricate listing-owner email addresses.",
     "Fax lookup is represented by the fax field on provider/service listings, not duplicate fax-only listings.",
     "sequence_id is a deterministic source identifier for traceability only.",
-    "Do not re-import this clean file over a populated directory. Export the target site with plugin-generated unique IDs and edit that export for in-place updates."
+    "Do not re-import this clean file over a populated directory. Export the target site with plugin-generated unique IDs and edit that export for in-place updates.",
+    "allied-health-new-listings-2026-08-14.csv contains only the 59 net-new Allied Health clinics and is safe for a one-time append import after duplicate review."
   ]
 }

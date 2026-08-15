@@ -22,7 +22,8 @@ For Dr. Mitra Abaeian, for example, Phone is `listingfields[6]` and Fax is `list
 5. Select one top-level category so the presentation adapter knows where it
    belongs: **Specialists**, **Clinics & Services**, **Referral Routes**,
    **Forms**, **Resources**, or **Quick Numbers**. Add applicable subcategories
-   such as specialty, agency, or resource group.
+   such as specialty, agency, resource group, **Chiropractors**, **Occupational
+   Therapists**, or **Physiotherapists**.
 6. For specialized details, use labelled Description lines such as
    `Languages:`, `Eligibility:`, `Hours:`, `How to access / refer:`, `Route:`,
    or `Referral details:`.
