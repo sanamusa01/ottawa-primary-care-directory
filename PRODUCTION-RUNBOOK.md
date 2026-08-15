@@ -19,12 +19,12 @@ authorize production work; the production owner should execute it after review.
 1. Install and activate Business Directory Plugin.
 2. Apply every field and setting in `DEVELOPER-HANDOFF.md`.
 3. Run the seven-row pilot in **Test Import** mode; require 7 accepted / 0 rejected.
-4. Import the 3,520-row full CSV exactly once into an empty directory.
-5. Confirm the published total is 3,520 before changing the public page.
+4. Import the 3,579-row full CSV exactly once into an empty directory.
+5. Confirm the published total is 3,579 before changing the public page.
 
 ## 3. Install the presentation adapter
 
-1. Upload `build/ottawa-directory-presentation-adapter-2.2.0.zip`.
+1. Upload `build/ottawa-directory-presentation-adapter-2.3.1.zip`.
 2. Confirm WordPress reports Business Directory Plugin as its dependency.
 3. Activate **Ottawa Directory Presentation Adapter**.
 4. Request `/wp-json/opcd/v1/directory` and require HTTP 200,
@@ -49,9 +49,9 @@ authorize production work; the production owner should execute it after review.
 
 ## 5. Acceptance tests
 
-- Business Directory REST: HTTP 200 and `X-WP-Total: 3520`.
+- Business Directory REST: HTTP 200 and `X-WP-Total: 3579`.
 - Adapter REST: HTTP 200; 786 unique specialists, 820 specialty appearances,
-  2,217 services, 49 routes, 9 intakes, 7 forms, 435 resources, 17 quick
+  2,276 services, 49 routes, 9 intakes, 7 forms, 435 resources, 17 quick
   numbers, and 1,156 fax entries.
 - Parent header/footer and Ottawa styling appear on `/business-directory/`.
 - Every tab renders: Search Everything, Referral Routes, Map, Specialists,
@@ -60,7 +60,7 @@ authorize production work; the production owner should execute it after review.
 - Fax search `613-737-8944` returns Eastern Ontario MRI Central Intake.
 - Map shows Ottawa postal-district circles, filtering, directions,
   Leaflet attribution, and OpenStreetMap attribution.
-- Adapter metadata reports 3,520 searchable listings, with 2,583 represented by supported
+- Adapter metadata reports 3,579 searchable listings, with 2,642 represented by supported
   public postal-location markers and 937 in the separate no-public-location
   results group.
 - Typing `abortion` offers **All matching listings for “abortion”** as the first
@@ -69,8 +69,17 @@ authorize production work; the production owner should execute it after review.
 - Selecting **Pregnancy options & abortion — what each service states** shows
   14 results: 11 mapped and 3 explicitly listed without a public map location.
 - Specialist specialty/language and service section/category/location filters work.
-- Clinics & Services defaults to **All locations**, shows all 2,217 unique
-  records, and retains the narrower Ottawa-only and outside-Ottawa choices.
+- Specialist filter options and Resources category/group labels do not expose
+  parenthesized record totals; Search Everything does not show the removed
+  “What lives where” table.
+- Resources opens with the category explorer, grouped disclosures, and working
+  top/bottom return controls instead of one uninterrupted page.
+- Clinics & Services defaults to **All locations**, shows all 2,276 unique
+  records, retains the narrower Ottawa-only and outside-Ottawa choices, and
+  does not expose the removed “Full details” disclosure.
+- `Dr Luc Mahler` returns one Chiropractic clinic and one mapped location;
+  `Modern OT` retains its original record and is categorized under
+  **Occupational Therapists**.
 - Specialist, Clinics & Services, and Fax Lookup tab labels do not expose
   totals; the unfiltered specialist/service panels do not repeat aggregate
   totals either.
