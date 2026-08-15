@@ -24,7 +24,7 @@ authorize production work; the production owner should execute it after review.
 
 ## 3. Install the presentation adapter
 
-1. Upload `build/ottawa-directory-presentation-adapter-2.3.1.zip`.
+1. Upload `build/ottawa-directory-presentation-adapter-2.3.2.zip`.
 2. Confirm WordPress reports Business Directory Plugin as its dependency.
 3. Activate **Ottawa Directory Presentation Adapter**.
 4. Request `/wp-json/opcd/v1/directory` and require HTTP 200,
@@ -59,14 +59,15 @@ authorize production work; the production owner should execute it after review.
 - Search `Mitra Abaeian` returns one result with `613 830-1771`.
 - Fax search `613-737-8944` returns Eastern Ontario MRI Central Intake.
 - Map shows Ottawa postal-district circles, filtering, directions,
-  Leaflet attribution, and OpenStreetMap attribution.
+  Leaflet attribution, and OpenStreetMap attribution, without exposing
+  aggregate, area, district, overflow, or marker-tooltip record totals.
 - Adapter metadata reports 3,579 searchable listings, with 2,642 represented by supported
   public postal-location markers and 937 in the separate no-public-location
   results group.
 - Typing `abortion` offers **All matching listings for “abortion”** as the first
   suggestion without a visible count on its right; clicking it retains every
   matching record.
-- Selecting **Pregnancy options & abortion — what each service states** shows
+- Selecting **Pregnancy options & abortion: what each service states** shows
   14 results: 11 mapped and 3 explicitly listed without a public map location.
 - Specialist specialty/language and service section/category/location filters work.
 - Specialist filter options and Resources category/group labels do not expose
@@ -76,7 +77,10 @@ authorize production work; the production owner should execute it after review.
   top/bottom return controls instead of one uninterrupted page.
 - Clinics & Services defaults to **All locations**, shows all 2,276 unique
   records, retains the narrower Ottawa-only and outside-Ottawa choices, and
-  does not expose the removed “Full details” disclosure.
+  does not expose the removed “Full details” disclosure. Listing name, website,
+  and Champlainhealthline links are visually separated; fees stay visible and
+  the complete eligibility/hour text remains available in a labelled compact
+  disclosure.
 - `Dr Luc Mahler` returns one Chiropractic clinic and one mapped location;
   `Modern OT` retains its original record and is categorized under
   **Occupational Therapists**.

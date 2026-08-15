@@ -7,7 +7,7 @@ Staging directory: https://wordpress-403092-6560255.cloudwaysapps.com/business-d
 ## Final state
 
 - Content engine: **Business Directory Plugin 6.4.26**, active
-- Presentation: **Ottawa Directory Presentation Adapter 2.3.1**, active
+- Presentation: **Ottawa Directory Presentation Adapter 2.3.2**, active
 - Published listings: **3,579**
 - Public page ID: `1941`
 - Public shortcode: `[ottawa_primary_care_directory]`
@@ -66,6 +66,17 @@ Staging directory: https://wordpress-403092-6560255.cloudwaysapps.com/business-d
 21. Added 59 net-new Allied Health clinics from the supplied Chiropractic,
     Occupational Therapy, and Physiotherapy tabs, enriched 11 existing
     records, and merged the one shared clinic instead of duplicating it.
+22. Reworked Clinics & Services column proportions and source-link spacing,
+    renamed the source action to **View on Champlainhealthline**, and kept every
+    eligibility/hour value available in a compact labelled disclosure so long
+    source records no longer create oversized empty cells.
+23. Removed every remaining public aggregate count from the Map interface,
+    including the top status, area and postal-district controls, hidden-result
+    notices, unavailable-map fallback, and marker tooltips. Record counts remain
+    in the read-only payload for QA and maintenance.
+24. Replaced dash separators in Referral Route and Resource titles with clearer
+    colon punctuation at presentation time without editing stored records,
+    source fields, or URLs.
 
 No paid module, Google Maps key, user account, unrelated page, footer, or
 production site was changed.
@@ -97,7 +108,7 @@ production site was changed.
 - Map search `abortion`: first suggestion is **All matching listings for
   “abortion”** with no count at the right; selecting it retains the full result
   set (16 mapped and 4 without a public map location).
-- Curated category **Pregnancy options & abortion — what each service states**:
+- Curated category **Pregnancy options & abortion: what each service states**:
   14 results, with 11 mapped and 3 transparently listed without a public map
   location.
 - Specialists: 786 unique physicians, 820 specialty appearances, 39 populated
@@ -113,7 +124,13 @@ production site was changed.
 - Resources now opens as a category explorer with compact grouped disclosures
   and return controls at both the top and bottom of a category view.
 - Clinics & Services retains all searchable source fields while omitting the
-  long public “Full details” disclosure.
+  long public “Full details” disclosure. The named Algonquin College Dental
+  Clinic, Billings Lodge, and Britannia Woods records keep their complete fees,
+  eligibility, and hours while rendering without oversized empty first cells.
+- Map controls, side-panel summaries, area/district buttons, overflow notices,
+  fallback tables, and marker tooltips show no public record totals.
+- Referral Route and Resource titles use readable colon separators; the source
+  records and URLs are unchanged.
 - `Dr. Danielle Gervais`: one published Family Medicine record, with no middle
   name displayed.
 - Fax `613-737-8944`: Eastern Ontario MRI Central Intake.

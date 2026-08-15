@@ -3,7 +3,7 @@
 ## Final architectural decision
 
 Staging uses **Business Directory Plugin 6.4.26** as the maintained content and
-administration engine, plus **Ottawa Directory Presentation Adapter 2.3.1** as
+administration engine, plus **Ottawa Directory Presentation Adapter 2.3.2** as
 a read-only public presentation layer.
 
 This hybrid approach preserves the backend Fred requested while restoring the
@@ -55,7 +55,7 @@ Monica/
 4. Import `migration/business-directory-plugin/ottawa-primary-care-directory-bdp.csv`
    once into an empty directory: comma columns, semicolon categories,
    auto-create categories, notifications off, batch size 40.
-5. Install and activate `build/ottawa-directory-presentation-adapter-2.3.1.zip`.
+5. Install and activate `build/ottawa-directory-presentation-adapter-2.3.2.zip`.
    WordPress will treat Business Directory Plugin as a required dependency.
 6. Use `[ottawa_primary_care_directory]` on the existing
    `/business-directory/` page. Preserve the page ID, slug, status, template,
@@ -89,6 +89,10 @@ location and contribute to district markers, while 937 are available through
 the clearly labelled **records without a public map location** result group.
 Resources with an explicit confidential, unpublished, virtual, or no-walk-in
 location are never assigned a guessed marker.
+
+The public Map intentionally omits aggregate record totals, district counts,
+area counts, hidden-result counts, and marker-tooltip counts. Those counts stay
+available in the read-only payload and this handoff for maintenance and QA.
 
 For regression testing, typing `abortion` must offer **All matching listings
 for “abortion”** before narrower category matches, without a count displayed at

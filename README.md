@@ -18,7 +18,7 @@ presentation:
 ## Current staging integration
 
 - Business Directory Plugin: **6.4.26**, active with automatic updates enabled
-- Ottawa Directory Presentation Adapter: **2.3.1**, active
+- Ottawa Directory Presentation Adapter: **2.3.2**, active
 - Public page shortcode: `[ottawa_primary_care_directory]`
 - Public URL: `/business-directory/`
 - Published WordPress listings: **3,579**
@@ -32,8 +32,11 @@ presentation:
 - Complete map search across all 3,579 published records, with postal-district
   markers, service filtering, directions, and a separate transparent list for
   online, confidential-location, or addressless records
+- A count-free public Map interface; aggregate totals stay in the REST metadata
+  and maintenance documentation rather than being shown to visitors
 - Specialist roster with specialty and language filters
-- Clinics/services with section, category, location, and OHT filters
+- Clinics/services with section, category, location, and OHT filters, readable
+  source-link spacing, and compact on-demand eligibility/hour details
 - Fax lookup
 - Forms
 - Resource category explorer with compact group disclosures and return navigation
