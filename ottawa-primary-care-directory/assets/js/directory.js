@@ -168,7 +168,7 @@
     'scope.natl':    ['National organisation. The address below is its head office, not a location you visit — reach it by phone or web.', 'Organisme national. L’adresse ci-dessous est le siège social.'],
     'scope.badgeti': ['Located outside Ottawa — this organisation serves the Ottawa region by phone, mail or web', 'Situé à l’extérieur d’Ottawa — dessert la région par téléphone, courrier ou Web'],
     'scope.ottawa': ['Ottawa-area locations only', 'Emplacements d’Ottawa seulement'],
-    'scope.all':    ['Include province-wide and national bodies', 'Inclure les organismes provinciaux et nationaux'],
+    'scope.all':    ['All locations', 'Tous les emplacements'],
     'scope.away':   ['Province-wide and national bodies only', 'Organismes provinciaux et nationaux seulement'],
     'scope.note':   ['Showing Ottawa-area locations only. Province-wide and national organisations — ministries, regulatory colleges, disease associations and helplines — are hidden. Most are based in Toronto but serve Ottawa by phone or web.', 'Emplacements d’Ottawa seulement.'],
     'svc.viewhl2':  ['Healthline record', 'Fiche Ligne Santé'],
@@ -373,7 +373,7 @@
 
   // ---------- state ----------
   var PAGE = 150;
-  var state = { tab: 'referral', q: '', spec: '', svc: '', leaf: '', lang: '', scope: 'ottawa', shown: {} };
+  var state = { tab: 'referral', q: '', spec: '', svc: '', leaf: '', lang: '', scope: 'all', shown: {} };
   // scope: 'ottawa' shows only listings with an Ottawa-area address; 'all' adds
   // the province-wide and national bodies; 'away' shows only those.
   // A listing whose address is outside Ottawa but whose catchment covers it.
@@ -482,9 +482,7 @@
         return '<option value="' + esc(g.group) + '"' + (state.spec === g.group ? ' selected' : '') + '>' +
                esc(g.group) + ' (' + g.count + ')</option>'; }).join('');
 
-    var h = '<div class="ottrx__panelhead"><h2 class="ottrx__h2">' + t('spec.title') + '</h2>' +
-      '<p class="ottrx__blurb">' + DATA.meta.specCount + ' ' + t('spec.blurb') + ' ' + DATA.meta.specGroups +
-      ' ' + t('spec.blurb2') + '</p></div>';
+    var h = '<div class="ottrx__panelhead"><h2 class="ottrx__h2">' + t('spec.title') + '</h2></div>';
 
 
 
@@ -507,8 +505,10 @@
       });
     });
 
-    h += '<p class="ottrx__status" role="status">' + rows.length + ' physician' + (rows.length === 1 ? '' : 's') +
-         (q ? ' matching “' + esc(q) + '”' : '') + '</p>';
+    if (q || state.spec || state.lang) {
+      h += '<p class="ottrx__status" role="status">' + rows.length + ' physician' + (rows.length === 1 ? '' : 's') +
+           (q ? ' matching “' + esc(q) + '”' : '') + '</p>';
+    }
     if (!rows.length) return h + emptyHtml(q);
 
     var limit = state.shown.spec || PAGE;
@@ -560,7 +560,7 @@
       '<select class="ottrx__select" data-filter="svc" aria-label="Filter by section">' + opts + '</select>' +
       leafOpts +
       '<select class="ottrx__select" data-filter="scope" aria-label="' + t('scope.label') + '">' +
-        ['ottawa','all','away'].map(function (k) {
+        ['all','ottawa','away'].map(function (k) {
           return '<option value="' + k + '"' + (state.scope === k ? ' selected' : '') + '>' + esc(t('scope.' + k)) + '</option>';
         }).join('') +
       '</select></div>';
@@ -573,19 +573,24 @@
         'authoritative page.</div>';
     }
 
-    var rows = [];
+    var rows = [], seenRows = {};
     secs.forEach(function (s) {
       if (state.svc && s.key !== state.svc) return;
       var secHit = matches(norm(s.title), q);
       s.rows.forEach(function (r) {
         if (!scopeOk(r)) return;
         if (state.leaf && (r.cats || []).indexOf(state.leaf) === -1) return;
-        if (matches(r._b, q) || secHit) rows.push({ c: s.title, r: r });
+        if (!(matches(r._b, q) || secHit)) return;
+        if (!state.svc && seenRows[r.id]) return;
+        seenRows[r.id] = 1;
+        rows.push({ c: s.title, r: r });
       });
     });
 
-    h += '<p class="ottrx__status" role="status">' + rows.length + ' listing' + (rows.length === 1 ? '' : 's') +
-         (q ? ' matching “' + esc(q) + '”' : '') + '</p>';
+    if (q || state.svc || state.leaf || state.scope !== 'all') {
+      h += '<p class="ottrx__status" role="status">' + rows.length + ' listing' + (rows.length === 1 ? '' : 's') +
+           (q ? ' matching “' + esc(q) + '”' : '') + '</p>';
+    }
     if (!rows.length) return h + emptyHtml(q);
 
     var limit = state.shown.svc || PAGE;
@@ -1258,24 +1263,12 @@
     return h + '</tbody></table></div>';
   }
 
-  function typeCounts(q) {
-    var c = { '': 0, spec: 0, svc: 0, other: 0 };
-    points().forEach(function (p) {
-      var blob = pointBlob(p);
-      if (q && !matches(blob, q)) return;
-      if (mapState.q && !matches(blob, mapState.q)) return;
-      c['']++; c[p.k]++;
-    });
-    return c;
-  }
-
   function segHtml(q) {
-    var c = typeCounts(q);
     var opts = [
-      { v: '',     label: t('map.all'),      dot: 'both', n: c[''] },
-      { v: 'spec', label: t('tab.spec'),     dot: 'spec', n: c.spec },
-      { v: 'svc',  label: t('tab.svc'),      dot: 'svc',  n: c.svc },
-      { v: 'other',label: t('map.other'),     dot: 'other', n: c.other }
+      { v: '',     label: t('map.all'),      dot: 'both' },
+      { v: 'spec', label: t('tab.spec'),     dot: 'spec' },
+      { v: 'svc',  label: t('tab.svc'),      dot: 'svc' },
+      { v: 'other',label: t('map.other'),     dot: 'other' }
     ];
     return '<div class="ottrx__seg" role="group" aria-label="' + t('map.showgroup') + '">' +
       opts.map(function (o, i) {
@@ -1285,7 +1278,6 @@
           '<label class="ottrx__segopt" for="' + id + '">' +
             '<span class="ottrx__segdot ottrx__segdot--' + o.dot + '"></span>' +
             '<span class="ottrx__seglabel">' + esc(o.label) + '</span>' +
-            '<span class="ottrx__segn" data-segcount="' + (o.v || 'all') + '">' + o.n + '</span>' +
           '</label>';
       }).join('') + '</div>';
   }
@@ -1299,10 +1291,7 @@
 
   function renderMap(q) {
     var rows = mapFiltered(q);
-    var allRows = points();
-    var mapped = locatedRows(allRows).length;
-    var h = '<div class="ottrx__panelhead"><h2 class="ottrx__h2">' + t('map.title') + '</h2>' +
-      '<p class="ottrx__blurb">' + mapped + ' ' + t('map.blurb') + ' ' + allRows.length + ' ' + t('map.searchable') + '</p></div>';
+    var h = '<div class="ottrx__panelhead"><h2 class="ottrx__h2">' + t('map.title') + '</h2></div>';
     h += '<div class="ottrx__mapsearchwrap">' +
       '<svg class="ottrx__searchicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
         'stroke-linecap="round" aria-hidden="true" focusable="false">' +
@@ -1349,9 +1338,9 @@
     { id: 'all',         key: 'tab.all',      render: renderAll },
     { id: 'referral',    key: 'tab.referral', render: renderReferral },
     { id: 'map',         key: 'tab.map',      render: renderMap },
-    { id: 'specialists', key: 'tab.spec',     render: renderSpecialists, count: DATA.meta.specCount },
-    { id: 'services',    key: 'tab.svc',      render: renderServices, count: DATA.meta.svcCount },
-    { id: 'fax',         key: 'tab.fax',      render: renderFax, count: DATA.meta.faxCount },
+    { id: 'specialists', key: 'tab.spec',     render: renderSpecialists },
+    { id: 'services',    key: 'tab.svc',      render: renderServices },
+    { id: 'fax',         key: 'tab.fax',      render: renderFax },
     { id: 'forms',       key: 'tab.forms',    render: renderForms },
     { id: 'resources',   key: 'tab.res',      render: renderResources },
     { id: 'quick',       key: 'tab.quick',    render: renderQuick }
@@ -1542,8 +1531,7 @@
     e.list.innerHTML = sgItems.map(function (o, i) {
       return '<li class="ottrx__suggestopt' + (i === sgIndex ? ' is-active' : '') + '" role="option" ' +
         'id="ottrx-sg-' + i + '" aria-selected="' + (i === sgIndex) + '" data-sg="' + esc(o.name) + '">' +
-        '<span class="ottrx__suggestname">' + esc(o.label || o.name) + '</span>' +
-        '<span class="ottrx__suggestn">' + o.n + '</span></li>';
+        '<span class="ottrx__suggestname">' + esc(o.label || o.name) + '</span></li>';
     }).join('');
     if (sgIndex >= 0) {
       e.input.setAttribute('aria-activedescendant', 'ottrx-sg-' + sgIndex);
@@ -1591,12 +1579,6 @@
     if (cnt) cnt.innerHTML = mapCountText(mapFiltered(state.q).length, state.q);
     var cl = panelEl.querySelector('[data-mapclear]');
     if (cl) cl.classList.toggle('is-on', !!mapState.q);
-    var tc = typeCounts(state.q);
-    var m = { all: '', spec: 'spec', svc: 'svc', other: 'other' };
-    Object.keys(m).forEach(function (k) {
-      var el = panelEl.querySelector('[data-segcount="' + k + '"]');
-      if (el) el.textContent = tc[m[k]];
-    });
   }
   panelEl.addEventListener('input', function (e) {
     if (!(e.target.getAttribute && e.target.hasAttribute('data-mapsearch'))) return;
