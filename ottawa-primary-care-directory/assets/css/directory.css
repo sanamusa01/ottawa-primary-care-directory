@@ -175,6 +175,28 @@
 .ottrx__table .muted{color:var(--ott-muted);font-size:13px}
 .ottrx__table mark{background:#FEF08A;color:inherit;padding:0 1px;border-radius:2px}
 
+/* Clinics & Services keeps every source field while giving names and source
+   links enough room to read as separate interface elements. */
+.ottrx__table--services{table-layout:fixed}
+.ottrx__table--services th:nth-child(1),.ottrx__table--services td:nth-child(1){width:23%}
+.ottrx__table--services th:nth-child(2),.ottrx__table--services td:nth-child(2){width:13%}
+.ottrx__table--services th:nth-child(3),.ottrx__table--services td:nth-child(3){width:18%}
+.ottrx__table--services th:nth-child(4),.ottrx__table--services td:nth-child(4){width:18%}
+.ottrx__table--services th:nth-child(5),.ottrx__table--services td:nth-child(5){width:28%}
+.ottrx__table--services td{overflow-wrap:anywhere}
+.ottrx__table--services .num{white-space:normal}
+.ottrx__service-name{font-weight:600;line-height:1.45}
+.ottrx__service-links{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin-top:9px;
+  padding-top:8px;border-top:1px solid var(--ott-border);font-size:12.5px;line-height:1.45}
+.ottrx__service-links a{display:inline-block}
+.ottrx__service-fees{line-height:1.5}
+.ottrx__service-secondary{margin-top:8px;padding-top:7px;border-top:1px solid var(--ott-border)}
+.ottrx__service-secondary summary{cursor:pointer;color:var(--ott-accent);font-weight:600;line-height:1.4}
+.ottrx__service-secondary[open] summary{margin-bottom:8px}
+.ottrx__service-secondary>div{margin-top:8px;line-height:1.5}
+.ottrx__service-secondary>div strong{display:block;margin-bottom:2px;color:var(--ott-secondary);font-size:12px;
+  text-transform:uppercase;letter-spacing:.03em}
+
 /* stacked card view for narrow screens */
 @media (max-width:720px){
   .ottrx__tablewrap--stack{border:0;overflow:visible}
@@ -190,6 +212,9 @@
     text-transform:uppercase;letter-spacing:.04em;display:block;margin-top:var(--ott-s2)}
   .ottrx__tablewrap--stack td:first-child::before{display:none}
   .ottrx__tablewrap--stack td:first-child{font-weight:600;font-size:15px;margin-bottom:var(--ott-s1)}
+  .ottrx__table--services{table-layout:auto}
+  .ottrx__table--services th:nth-child(n),.ottrx__table--services td:nth-child(n){width:auto}
+  .ottrx__service-links{font-weight:400}
 }
 
 /* ---------- filters + status ---------- */
