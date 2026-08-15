@@ -17,8 +17,8 @@
     'title':        ['Referral & Resource Directory', 'Répertoire des orientations et des ressources'],
     'sub':          ['Where to send a referral in Ottawa and the Champlain region, and the tools, forms and community supports that go with it. Built for family physicians and nurse practitioners.',
                      'Où adresser une demande de consultation à Ottawa et dans la région de Champlain, avec les outils, formulaires et soutiens communautaires qui vont avec. Conçu pour les médecins de famille et les infirmières praticiennes.'],
-    'stamp':        ['Compiled 5 August 2026 · Service listings from Champlain Healthline, retrieved 4 August 2026 · Focused-practice and OHT resources verified 13 August 2026',
-                     'Compilé le 5 août 2026 · Services tirés de Ligne Santé Champlain, extraits le 4 août 2026 · Ressources ESO vérifiées le 13 août 2026'],
+    'stamp':        ['Compiled 14 August 2026 · Service listings from Champlain Healthline, retrieved 4 August 2026 · Allied Health additions from the Resource list supplied 14 August 2026',
+                     'Compilé le 14 août 2026 · Services tirés de Ligne Santé Champlain, extraits le 4 août 2026 · Ajouts en santé alliée provenant de la liste de ressources fournie le 14 août 2026'],
     'search.label': ['Search the directory', 'Rechercher dans le répertoire'],
     'search.ph':    ['Search everything — specialty, physician, clinic, form, phone number…',
                      'Tout rechercher — spécialité, médecin, clinique, formulaire, numéro de téléphone…'],
@@ -220,14 +220,20 @@
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
+  function humanText(s) {
+    return String(s == null ? '' : s).replace(/(^|[^-])\s*--\s*([^-]|$)/g, '$1 – $2');
+  }
+  function publicLabel(s) {
+    return humanText(s).replace(/\s*\(\d+\)\s*$/, '');
+  }
   function safeUrl(u) {
     u = String(u || '').trim();
     return /^https?:\/\//i.test(u) ? u : '';
   }
   function link(u, t) {
     var s = safeUrl(u);
-    if (!s) return esc(t || '');
-    return '<a href="' + esc(s) + '" target="_blank" rel="noopener noreferrer">' + esc(t || s) + '</a>';
+    if (!s) return esc(t ? humanText(t) : '');
+    return '<a href="' + esc(s) + '" target="_blank" rel="noopener noreferrer">' + esc(t ? humanText(t) : s) + '</a>';
   }
   function norm(s) {
     s = String(s == null ? '' : s).toLowerCase();
@@ -235,7 +241,7 @@
     return s.normalize ? s.normalize('NFD').replace(/[̀-ͯ]/g, '') : s;
   }
   function hl(text, q) {
-    var t = esc(text);
+    var t = esc(humanText(text));
     if (!q) return t;
     var terms = q.split(/\s+/).filter(function (x) { return x.length > 1; })
                  .map(function (x) { return x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); });
@@ -373,7 +379,7 @@
 
   // ---------- state ----------
   var PAGE = 150;
-  var state = { tab: 'referral', q: '', spec: '', svc: '', leaf: '', lang: '', scope: 'all', shown: {} };
+  var state = { tab: 'referral', q: '', spec: '', svc: '', leaf: '', lang: '', scope: 'all', res: '', shown: {} };
   // scope: 'ottawa' shows only listings with an Ottawa-area address; 'all' adds
   // the province-wide and national bodies; 'away' shows only those.
   // A listing whose address is outside Ottawa but whose catchment covers it.
@@ -477,10 +483,10 @@
 
   function renderSpecialists(q) {
     var groups = DATA.specialists;
-    var opts = '<option value="">' + t('spec.allspec') + ' (' + DATA.meta.specGroups + ')</option>' +
+    var opts = '<option value="">' + t('spec.allspec') + '</option>' +
       groups.map(function (g) {
         return '<option value="' + esc(g.group) + '"' + (state.spec === g.group ? ' selected' : '') + '>' +
-               esc(g.group) + ' (' + g.count + ')</option>'; }).join('');
+               esc(g.group) + '</option>'; }).join('');
 
     var h = '<div class="ottrx__panelhead"><h2 class="ottrx__h2">' + t('spec.title') + '</h2></div>';
 
@@ -613,10 +619,11 @@
       if (r.fees) extra.push(hl(r.fees, q));
       if (r.elig) extra.push('<span class="muted">' + hl(r.elig, q) + '</span>');
       if (r.hours) extra.push('<span class="muted">' + hl(r.hours, q) + '</span>');
+      var sourceLinks = [];
+      if (r.web) sourceLinks.push(link(r.web, t('svc.viewsite')));
+      if (r.healthline !== false) sourceLinks.push(link(hlUrl(r.id), r.web ? t('svc.viewhl2') : t('svc.viewhl')));
       h += '<tr><td data-th="Service">' + head +
-        '<br>' + (r.web ? link(r.web, t('svc.viewsite')) + ' <span class="muted">·</span> ' +
-                  link(hlUrl(r.id), t('svc.viewhl2'))
-                : link(hlUrl(r.id), t('svc.viewhl'))) + fullDetails(r, q) + '</td>' +
+        (sourceLinks.length ? '<br>' + sourceLinks.join(' <span class="muted">·</span> ') : '') + '</td>' +
         '<td data-th="Categories" class="muted">' + esc((r.cats || []).slice(0, 3).join(' · ')) +
           ((r.cats || []).length > 3 ? ' <span class="muted">+' + (r.cats.length - 3) + '</span>' : '') + '</td>' +
         '<td data-th="Address" class="muted">' + scopeAddr(r, q) + '</td>' +
@@ -629,36 +636,6 @@
            Math.min(PAGE, rows.length - limit) + ' more (' + (rows.length - limit) + ' remaining)</button>';
     }
     return h;
-  }
-
-  // Every remaining field from the Healthline record, behind a disclosure so the
-  // table stays scannable but nothing is hidden from the reader.
-  var DETAIL_ROWS = [
-    ['desc', 'Description'], ['elig', 'Eligibility / who it serves'],
-    ['apply', 'How to access'], ['fees', 'Fees'], ['hours', 'Hours'],
-    ['area', 'Area served'], ['lang', 'Languages'], ['langnotes', 'Language notes'],
-    ['access', 'Accessibility'], ['accessnotes', 'Accessibility notes'],
-    ['execs', 'Contacts / staff'], ['contacts', 'Public contacts'],
-    ['street', 'Street address'], ['cross', 'Nearest intersection'],
-    ['city', 'City'], ['postal', 'Postal code'],
-    ['tollfree', 'Toll free'], ['tty', 'TTY'], ['crisis', 'Crisis line'],
-    ['afterhours', 'After hours'], ['meetings', 'Meetings'],
-    ['dates', 'Dates available'], ['updated', 'Listing last updated']
-  ];
-  function fullDetails(r, q) {
-    var rows = '';
-    if (r.web) rows += '<dt>Website</dt><dd>' + link(r.web, r.web) + '</dd>';
-    if (r.id)  rows += '<dt>Healthline record</dt><dd>' + link(hlUrl(r.id), t('svc.viewhl2')) + '</dd>';
-    DETAIL_ROWS.forEach(function (f) {
-      if (!r[f[0]]) return;
-      rows += '<dt>' + esc(f[1]) + '</dt><dd>' + hl(r[f[0]], q) + '</dd>';
-    });
-    if (r.cats && r.cats.length) {
-      rows += '<dt>All categories</dt><dd>' + esc(r.cats.join(' · ')) + '</dd>';
-    }
-    if (!rows) return '';
-    return '<details class="ottrx__details"><summary>' + t('svc.fulldetails') + '</summary>' +
-           '<dl class="ottrx__dl">' + rows + '</dl></details>';
   }
 
   // ======================= FAX REVERSE LOOKUP =======================
@@ -833,28 +810,13 @@
     var h = '<div class="ottrx__panelhead"><h2 class="ottrx__h2">' + t('all.title') + '</h2>';
     if (!q) {
       h += '<p class="ottrx__blurb">' + t('all.empty') + '</p></div>';
-      h += '<div class="ottrx__tablewrap ottrx__tablewrap--stack"><table class="ottrx__table">' +
-        '<caption>' + t('all.what') + '</caption><thead><tr><th scope="col">' + t('col.section') + '</th><th scope="col">' + t('col.holds') + '</th>' +
-        '</tr></thead><tbody>' +
-        [['Referral routes', 'The 4 routes, 8 central intakes, and routing for 48 specialties'],
-         ['Map', 'Everything with a postal code, placed by district'],
-         ['Specialists', DATA.meta.specCount + ' attributed specialists across ' + DATA.meta.specGroups + ' specialties'],
-         ['Clinics & services', DATA.meta.svcCount + ' Healthline listings in ' + DATA.meta.svcSections + ' sections'],
-         ['Fax lookup', DATA.meta.faxCount + ' fax numbers, searchable in reverse'],
-         ['Forms', 'WSIB, Mental Health Act, MTO and insurance forms'],
-         ['Resources', 'Colleges, clinical tools, billing, allied care, social supports'],
-         ['Quick numbers', 'Crisis lines and intake numbers']]
-          .map(function (r) {
-            return '<tr><td data-th="Section">' + esc(r[0]) + '</td><td data-th="Holds" class="muted">' +
-                   esc(r[1]) + '</td></tr>'; }).join('') +
-        '</tbody></table></div>';
       return h;
     }
 
     var rows = allRows(q);
     var bySec = {};
     rows.forEach(function (r) { bySec[r.sec] = (bySec[r.sec] || 0) + 1; });
-    var secList = Object.keys(bySec).map(function (k) { return k + ' (' + bySec[k] + ')'; }).join(', ');
+    var secList = Object.keys(bySec).join(', ');
 
     h += '<p class="ottrx__blurb">' + rows.length + ' result' + (rows.length === 1 ? '' : 's') +
          ' for “' + esc(q) + '”' + (secList ? ' — ' + esc(secList) : '') + '</p></div>';
@@ -905,27 +867,62 @@
   }
 
   function renderResources(q) {
-    var h = '<div class="ottrx__panelhead"><h2 class="ottrx__h2">' + t('res.title') + '</h2>' +
+    var h = '<div class="ottrx__panelhead"><h2 class="ottrx__h2" tabindex="-1" data-resource-title>' + t('res.title') + '</h2>' +
       '<p class="ottrx__blurb">' + t('res.blurb') + '</p></div>';
-    var jump = [], body = '', any = 0;
-    DATA.resources.forEach(function (sec) {
-      var secHtml = '', n = 0;
+    var active = null;
+    DATA.resources.forEach(function (sec) { if (sec.id === state.res) active = sec; });
+
+    if (!q && !active) {
+      h += '<p class="ottrx__resourcehint">Choose a category to see its resources. You can return here at any time.</p>' +
+        '<div class="ottrx__resourcegrid" role="list">';
+      DATA.resources.forEach(function (sec) {
+        h += '<button type="button" class="ottrx__resourcechoice" data-resource="' + esc(sec.id) + '" role="listitem">' +
+          '<strong>' + esc(publicLabel(sec.title)) + '</strong>' +
+          (sec.blurb ? '<span>' + esc(humanText(sec.blurb)) + '</span>' : '') +
+          '<span class="ottrx__resourcego">Explore resources →</span></button>';
+      });
+      return h + '</div>';
+    }
+
+    var options = '<option value="">All resource categories</option>' + DATA.resources.map(function (sec) {
+      return '<option value="' + esc(sec.id) + '"' + (active && active.id === sec.id ? ' selected' : '') + '>' +
+        esc(publicLabel(sec.title)) + '</option>';
+    }).join('');
+    h += '<div class="ottrx__resourcebar">' +
+      '<button type="button" class="ottrx__resourceback" data-resource="">← Browse all categories</button>' +
+      '<select class="ottrx__select" data-filter="res" aria-label="Choose a resource category">' + options + '</select></div>';
+
+    var sections = q ? DATA.resources : [active];
+    var body = '', any = 0;
+    sections.forEach(function (sec) {
+      if (!sec) return;
+      var groups = [], total = 0;
       sec.groups.forEach(function (g) {
         var items = g.items.filter(function (i) { return matches(i._b, q); });
         if (!items.length) return;
-        n += items.length;
-        if (g.title) secHtml += '<h4 class="ottrx__h3">' + esc(g.title) + '</h4>';
-        items.forEach(function (i) { secHtml += cardHtml(i, q); });
+        total += items.length;
+        groups.push({
+          title: publicLabel(g.title) || publicLabel(sec.title),
+          cards: items.map(function (i) { return cardHtml(i, q); }).join('')
+        });
       });
-      if (!n) return;
-      any += n;
-      jump.push('<a href="#ottrx-' + esc(sec.id) + '">' + esc(sec.title) + '</a>');
-      body += '<h3 class="ottrx__h3" id="ottrx-' + esc(sec.id) + '" tabindex="-1">' + esc(sec.title) +
-              ' <span class="muted">(' + n + ')</span></h3>' +
-              '<p class="ottrx__blurb" style="margin-bottom:12px">' + esc(sec.blurb) + '</p>' + secHtml;
+      if (!total) return;
+      any += total;
+      body += '<section class="ottrx__resourcepage" aria-labelledby="ottrx-' + esc(sec.id) + '">' +
+        '<h3 class="ottrx__h3" id="ottrx-' + esc(sec.id) + '">' + esc(publicLabel(sec.title)) + '</h3>' +
+        (sec.blurb ? '<p class="ottrx__blurb ottrx__resourceblurb">' + esc(humanText(sec.blurb)) + '</p>' : '');
+      if (groups.length === 1) {
+        body += (groups[0].title !== publicLabel(sec.title) ? '<h4 class="ottrx__h4">' + esc(groups[0].title) + '</h4>' : '') + groups[0].cards;
+      } else {
+        groups.forEach(function (group) {
+          body += '<details class="ottrx__resourcegroup"' + (q ? ' open' : '') + '><summary>' + esc(group.title) + '</summary>' +
+            '<div class="ottrx__resourceitems">' + group.cards + '</div></details>';
+        });
+      }
+      body += '<button type="button" class="ottrx__resourceback ottrx__resourceback--bottom" data-resource="">Browse another resource category</button></section>';
     });
     if (!any) return h + emptyHtml(q);
-    if (jump.length > 1) h += '<nav class="ottrx__jump" aria-label="' + t('res.jump') + '">' + jump.join('') + '</nav>';
+    if (q) h += '<p class="ottrx__status" role="status">' + any + ' resource' + (any === 1 ? '' : 's') + ' matching “' + esc(q) + '”</p>';
     return h + body;
   }
 
@@ -1449,6 +1446,7 @@
     if (state.svc) p.push('svc=' + encodeURIComponent(state.svc));
     if (state.leaf) p.push('leaf=' + encodeURIComponent(state.leaf));
     if (state.lang) p.push('speclang=' + encodeURIComponent(state.lang));
+    if (state.res) p.push('res=' + encodeURIComponent(state.res));
     var h = '#' + p.join('&');
     if (h !== location.hash) history.replaceState(null, '', h);
   }
@@ -1465,6 +1463,7 @@
       if (k === 'leaf') state.leaf = v;
       if (k === 'lang' && (v === 'fr' || v === 'en')) LANG = v;
       if (k === 'speclang') state.lang = v;
+      if (k === 'res') state.res = v;
     });
     if (state.q) searchEl.value = state.q;
   }
@@ -1648,6 +1647,14 @@
     if (sel) sel.focus();
   });
   panelEl.addEventListener('click', function (e) {
+    var resource = e.target.closest('[data-resource]');
+    if (resource) {
+      state.res = resource.getAttribute('data-resource') || '';
+      render(); writeHash();
+      var resourceTitle = panelEl.querySelector('[data-resource-title]');
+      if (resourceTitle) resourceTitle.focus();
+      return;
+    }
     var suggestion = e.target.closest('[data-sg]');
     if (suggestion) { e.preventDefault(); sgPick(suggestion.getAttribute('data-sg')); return; }
     var sa = e.target.closest('[data-showall]');
