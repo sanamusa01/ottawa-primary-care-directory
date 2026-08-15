@@ -30,7 +30,7 @@ published in the directory.
 - Clinics and services with section, category, location, and OHT filters
 - Fax lookup
 - Forms
-- Resources
+- Resources category explorer with compact group disclosures and return navigation
 - Quick numbers
 - English/French interface controls
 - Feedback/correction links
@@ -76,6 +76,11 @@ tags flow into the public interface automatically after saving.
 Descriptions use labelled lines such as `Languages:`, `Eligibility:`, and
 `How to access / refer:`. Keeping those labels when editing allows the adapter
 to place details in the intended part of each card.
+
+The 14 August Allied Health addition is transcribed in
+`migration/allied-health-resource-list-2026-08-14.json`. It adds 59 new clinic
+listings, enriches 11 existing records, and keeps a single shared clinic record
+when the same location appears in more than one profession tab.
 
 ## Map dependency
 

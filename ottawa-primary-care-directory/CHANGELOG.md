@@ -1,5 +1,24 @@
 # Changelog
 
+## 2.3.1 — 2026-08-14
+
+- Normalized source double hyphens in public display text while retaining the
+  unchanged source values and URLs in the data layer.
+
+## 2.3.0 — 2026-08-14
+
+- Replaced the long Resources page with a category explorer, compact category
+  selector, grouped disclosures, and one-click return to all categories.
+- Removed public count suffixes from resource headings and specialist filter
+  options while retaining all underlying records.
+- Removed the Search Everything “What lives where” table and the long Clinics
+  & Services “Full details” disclosure.
+- Normalized spaced double hyphens to an en dash at presentation time without
+  changing stored source text.
+- Added 59 net-new Allied Health clinics from the supplied Chiropractic,
+  Occupational Therapy, and Physiotherapy tabs; enriched 11 existing listings
+  and merged one clinic shared between two professions rather than duplicating it.
+
 ## 2.2.0 — 2026-08-14
 
 - Made **All locations** the explicit default for Clinics & Services so all
