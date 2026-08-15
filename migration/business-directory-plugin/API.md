@@ -35,7 +35,9 @@ The payload includes `mapRows`, one compact searchable projection for each
 published listing. `meta.mapCount`, `meta.mapPlaced`, and `meta.mapUnplaced`
 report full map-search coverage, records with supported public postal
 locations, and records retained in the no-public-location group respectively.
-The current staging values are 3,519, 2,582, and 937.
+The current staging values are 3,520, 2,583, and 937. These coverage totals are
+available to administrators and tests through the API but are intentionally not
+displayed in the public map interface.
 
 This is a public directory dataset. It must not be extended to private
 metadata, draft records, or unauthenticated writes.

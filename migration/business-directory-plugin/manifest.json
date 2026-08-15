@@ -18,7 +18,7 @@
     "username",
     "sequence_id"
   ],
-  "total_listings": 3519,
+  "total_listings": 3520,
   "counts": {
     "central_intakes": 9,
     "clinics_services": 2217,
@@ -26,7 +26,7 @@
     "quick_numbers": 17,
     "referral_routes": 49,
     "resources": 435,
-    "specialists": 785
+    "specialists": 786
   },
   "pilot_listings": 7,
   "notes": [
