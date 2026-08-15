@@ -101,8 +101,8 @@
     'map.clear':    ['Clear the map filter', 'Effacer le filtre de la carte'],
     'map.showgroup':['Show on the map', 'Afficher sur la carte'],
     'map.suggestaria': ['Matching services', 'Services correspondants'],
-    'map.suggestcount': ['matching services. Use the arrow keys to choose one.',
-                         'services correspondants. Utilisez les flèches pour en choisir un.'],
+    'map.suggestcount': ['Matching services are available. Use the arrow keys to choose one.',
+                         'Des services correspondants sont disponibles. Utilisez les flèches pour en choisir un.'],
     'map.searchall': ['All matching listings for', 'Toutes les fiches correspondant à'],
     'map.all':      ['All', 'Tout'],
     'map.other':    ['Resources & other', 'Ressources et autres'],
@@ -127,8 +127,8 @@
     'map.approx':   ['marker is approximate', 'repère approximatif'],
     'map.nothing':  ['Nothing here with the current filters.', 'Rien ici avec les filtres actuels.'],
     'map.nolistings':['No listings match the current filters.', 'Aucune fiche ne correspond aux filtres actuels.'],
-    'map.notshown': ['more not shown. Narrow the search or pick a postal district above.',
-                     'de plus non affichées. Précisez la recherche ou choisissez un secteur postal ci-dessus.'],
+    'map.notshown': ['Additional results are not shown. Narrow the search or pick a postal district above.',
+                     'D’autres résultats ne sont pas affichés. Précisez la recherche ou choisissez un secteur postal ci-dessus.'],
     'map.fail':     ['<strong>Map unavailable.</strong> The map library could not load — usually a blocked CDN on a locked-down network. Everything is still browsable by area below, and every listing remains in the Specialists and Clinics tabs.',
                      '<strong>Carte indisponible.</strong> La bibliothèque cartographique n’a pas pu se charger — généralement un CDN bloqué sur un réseau restreint. Tout reste consultable par secteur ci-dessous, et chaque fiche demeure dans les onglets Spécialistes et Cliniques.'],
     'directions':   ['Directions', 'Itinéraire'],
@@ -156,7 +156,7 @@
     'svc.cats':     ['categories in this section', 'catégories de cette section'],
     'svc.seclabel': ['Filter by section', 'Filtrer par section'],
     'svc.catlabel': ['Filter by service category', 'Filtrer par catégorie de service'],
-    'svc.viewhl':   ['View on Healthline', 'Voir sur Ligne Santé'],
+    'svc.viewhl':   ['View on Champlainhealthline', 'Voir sur Ligne Santé Champlain'],
     'svc.viewsite': ['Visit website', 'Site Web'],
     'scope.label': ['Filter by location', 'Filtrer par lieu'],
     'scope.badge':   ['Serves Ottawa region', 'Dessert la région d’Ottawa'],
@@ -171,8 +171,11 @@
     'scope.all':    ['All locations', 'Tous les emplacements'],
     'scope.away':   ['Province-wide and national bodies only', 'Organismes provinciaux et nationaux seulement'],
     'scope.note':   ['Showing Ottawa-area locations only. Province-wide and national organisations — ministries, regulatory colleges, disease associations and helplines — are hidden. Most are based in Toronto but serve Ottawa by phone or web.', 'Emplacements d’Ottawa seulement.'],
-    'svc.viewhl2':  ['Healthline record', 'Fiche Ligne Santé'],
+    'svc.viewhl2':  ['View on Champlainhealthline', 'Voir sur Ligne Santé Champlain'],
     'svc.fulldetails': ['Full details', 'Fiche complète'],
+    'svc.eligibility': ['Eligibility', 'Admissibilité'],
+    'svc.hours': ['Hours', 'Heures'],
+    'svc.eligibilityhours': ['Eligibility and hours', 'Admissibilité et heures'],
 
     'fax.title':    ['Fax lookup', 'Recherche par télécopieur'],
     'fax.match':    ['match', 'correspondance'],
@@ -223,8 +226,14 @@
   function humanText(s) {
     return String(s == null ? '' : s).replace(/(^|[^-])\s*--\s*([^-]|$)/g, '$1 – $2');
   }
+  function titleText(s) {
+    return humanText(s).replace(/\s+[—–]\s+/g, ': ');
+  }
+  function titleHl(s, q) {
+    return hl(titleText(s), q);
+  }
   function publicLabel(s) {
-    return humanText(s).replace(/\s*\(\d+\)\s*$/, '');
+    return titleText(s).replace(/\s*\(\d+\)\s*$/, '');
   }
   function safeUrl(u) {
     u = String(u || '').trim();
@@ -272,7 +281,7 @@
   }
   function cardHtml(item, q) {
     return '<article class="ottrx__card">' +
-      '<h4 class="ottrx__cardname">' + hl(item.name, q) + '</h4>' +
+      '<h4 class="ottrx__cardname">' + titleHl(item.name, q) + '</h4>' +
       (ohtBadge(item) ? '<p class="ottrx__cardbadges">' + ohtBadge(item) + '</p>' : '') +
       (item.desc ? '<p class="ottrx__carddesc">' + hl(item.desc, q) + '</p>' : '') +
       detailsHtml(item.d, q) + '</article>';
@@ -434,7 +443,7 @@
     if (routes.length) {
       h += '<h3 class="ottrx__h3">' + t('ref.routes') + '</h3>';
       routes.forEach(function (r) {
-        h += '<article class="ottrx__card"><h4 class="ottrx__cardname">' + t('ref.route') + ' ' + esc(r.n) + ' — ' + hl(r.name, q) + '</h4>' +
+        h += '<article class="ottrx__card"><h4 class="ottrx__cardname">' + t('ref.route') + ' ' + esc(r.n) + ': ' + titleHl(r.name, q) + '</h4>' +
              '<p class="ottrx__carddesc">' + hl(r.desc, q) + '</p>';
         if (r.links.length) {
           h += '<dl class="ottrx__dl">' + r.links.map(function (l) {
@@ -456,7 +465,7 @@
         if (i.phone) c.push('Ph ' + esc(i.phone));
         if (i.fax) c.push('Fax ' + esc(i.fax));
         if (i.email) c.push('<a href="mailto:' + esc(i.email) + '">' + esc(i.email) + '</a>');
-        h += '<tr><td data-th="Program">' + link(i.url, i.name) + '</td>' +
+        h += '<tr><td data-th="Program">' + link(i.url, titleText(i.name)) + '</td>' +
              '<td data-th="Scope" class="muted">' + hl(i.scope, q) + '</td>' +
              '<td data-th="Contact" class="num">' + c.join('<br>') + '</td></tr>';
       });
@@ -575,7 +584,7 @@
     if (active && active.src !== 'site') {
       h += '<div class="ottrx__note"><strong>Grouping note.</strong> Champlain Healthline publishes the exact contents of ' +
         'this section on its own site; our copy of it is derived by matching category names, so a listing could sit in a ' +
-        'neighbouring section. Every row shows its real Healthline categories, and “View on Healthline” opens the ' +
+        'neighbouring section. Every row shows its real Healthline categories, and “View on Champlainhealthline” opens the ' +
         'authoritative page.</div>';
     }
 
@@ -602,12 +611,12 @@
     var limit = state.shown.svc || PAGE;
     var slice = rows.slice(0, limit);
 
-    h += '<div class="ottrx__tablewrap ottrx__tablewrap--stack"><table class="ottrx__table">' +
+    h += '<div class="ottrx__tablewrap ottrx__tablewrap--stack ottrx__tablewrap--services"><table class="ottrx__table ottrx__table--services">' +
       '<thead><tr><th scope="col">' + t('col.service') + '</th><th scope="col">' + t('col.cats') + '</th><th scope="col">' + t('col.address') + '</th>' +
       '<th scope="col">' + t('col.contact') + '</th><th scope="col">' + t('col.fees') + '</th></tr></thead><tbody>';
     slice.forEach(function (o) {
       var r = o.r;
-      var head = (r.web ? link(r.web, r.name) : hl(r.name, q));
+      var head = '<div class="ottrx__service-name">' + (r.web ? link(r.web, r.name) : hl(r.name, q)) + '</div>';
       var bdg = ohtBadge(r) + scopeBadge(r);
       if (bdg) head += '<br>' + bdg;
       if (r.org && norm(r.org) !== norm(r.name)) head += '<br><span class="muted">' + hl(r.org, q) + '</span>';
@@ -616,14 +625,21 @@
       if (r.fax) contact.push('<span class="muted">Fax ' + hl(r.fax, q) + '</span>');
       if (r.email) contact.push('<a href="mailto:' + esc(r.email) + '">' + esc(r.email) + '</a>');
       var extra = [];
-      if (r.fees) extra.push(hl(r.fees, q));
-      if (r.elig) extra.push('<span class="muted">' + hl(r.elig, q) + '</span>');
-      if (r.hours) extra.push('<span class="muted">' + hl(r.hours, q) + '</span>');
+      if (r.fees) extra.push('<div class="ottrx__service-fees">' + hl(r.fees, q) + '</div>');
+      var secondary = [];
+      if (r.elig) secondary.push('<div><strong>' + t('svc.eligibility') + '</strong>' + hl(r.elig, q) + '</div>');
+      if (r.hours) secondary.push('<div><strong>' + t('svc.hours') + '</strong>' + hl(r.hours, q) + '</div>');
+      if (secondary.length) {
+        var secondaryLabel = r.elig && r.hours ? t('svc.eligibilityhours') :
+          (r.elig ? t('svc.eligibility') : t('svc.hours'));
+        extra.push('<details class="ottrx__service-secondary"><summary>' + secondaryLabel + '</summary>' +
+          secondary.join('') + '</details>');
+      }
       var sourceLinks = [];
       if (r.web) sourceLinks.push(link(r.web, t('svc.viewsite')));
       if (r.healthline !== false) sourceLinks.push(link(hlUrl(r.id), r.web ? t('svc.viewhl2') : t('svc.viewhl')));
       h += '<tr><td data-th="Service">' + head +
-        (sourceLinks.length ? '<br>' + sourceLinks.join(' <span class="muted">·</span> ') : '') + '</td>' +
+        (sourceLinks.length ? '<div class="ottrx__service-links">' + sourceLinks.join('') + '</div>' : '') + '</td>' +
         '<td data-th="Categories" class="muted">' + esc((r.cats || []).slice(0, 3).join(' · ')) +
           ((r.cats || []).length > 3 ? ' <span class="muted">+' + (r.cats.length - 3) + '</span>' : '') + '</td>' +
         '<td data-th="Address" class="muted">' + scopeAddr(r, q) + '</td>' +
@@ -1091,10 +1107,14 @@
     }
     var h = items.slice(0, cap).map(hitHtml).join('');
     if (items.length > cap) {
-      h += '<div class="ottrx__hit"><p class="ottrx__hitmeta">' + (items.length - cap) +
-           ' ' + t('map.notshown') + '</p></div>';
+      h += '<div class="ottrx__hit"><p class="ottrx__hitmeta">' + t('map.notshown') + '</p></div>';
     }
     return h;
+  }
+
+  function mapMatchText(term) {
+    if (!term) return '';
+    return (LANG === 'fr' ? 'Résultats pour ' : 'Showing matches for ') + '“' + esc(term) + '”';
   }
 
   function renderSide(q) {
@@ -1112,8 +1132,8 @@
       side.innerHTML = '<div class="ottrx__mapsidehead">' +
         '<button type="button" class="ottrx__back" data-area="' + esc(g.area) + '">&larr; ' + esc(g.area) + ' ' + t('map.ottawa') + '</button>' +
         '<h4>' + esc(g.name) + '</h4>' +
-        '<p>' + esc(mapState.fsa) + ' · ' + hits.length + ' listing' + (hits.length === 1 ? '' : 's') +
-        (term ? ' matching “' + esc(term) + '”' : '') + ' · ' + t('map.approx') + '</p></div>' +
+        '<p>' + esc(mapState.fsa) + ' · ' + t('map.approx') +
+        (term ? ' · ' + mapMatchText(term) : '') + '</p></div>' +
         sideList(hits, 150);
       side.scrollTop = 0;
       return;
@@ -1128,12 +1148,10 @@
       side.innerHTML = '<div class="ottrx__mapsidehead">' +
         '<button type="button" class="ottrx__back" data-area="">' + t('map.backareas') + '</button>' +
         '<h4>' + esc(mapState.area) + ' ' + t('map.ottawa') + '</h4>' +
-        '<p>' + inArea.length + ' listing' + (inArea.length === 1 ? '' : 's') +
-        (term ? ' matching “' + esc(term) + '”' : '') + ' ' + t('map.across') + ' ' + dkeys.length + ' ' +
-        (dkeys.length === 1 ? t('map.district') : t('map.districts')) + '</p></div>' +
+        '<p>' + (term ? mapMatchText(term) + '. ' : '') + t('map.choosehint') + '</p></div>' +
         (dkeys.length > 1 ? '<div class="ottrx__districts">' + dkeys.map(function (f) {
           return '<button type="button" class="ottrx__district" data-fsa="' + esc(f) + '">' +
-                 esc(f) + ' <span>' + dist[f] + '</span></button>'; }).join('') + '</div>' : '') +
+                 esc(f) + '</button>'; }).join('') + '</div>' : '') +
         sideList(inArea, 150);
       side.scrollTop = 0;
       return;
@@ -1143,8 +1161,8 @@
     if (mapState.unplaced) {
       side.innerHTML = '<div class="ottrx__mapsidehead">' +
         '<button type="button" class="ottrx__back" data-area="">' + t('map.backto') + '</button>' +
-        '<h4>' + t('map.unplaced') + '</h4><p>' + unplaced.length + ' listing' + (unplaced.length === 1 ? '' : 's') +
-        (term ? ' matching “' + esc(term) + '”' : '') + '</p></div>' + sideList(unplaced, 200);
+        '<h4>' + t('map.unplaced') + '</h4>' +
+        (term ? '<p>' + mapMatchText(term) + '</p>' : '') + '</div>' + sideList(unplaced, 200);
       side.scrollTop = 0;
       return;
     }
@@ -1153,8 +1171,8 @@
     if (mapState.all) {
       side.innerHTML = '<div class="ottrx__mapsidehead">' +
         '<button type="button" class="ottrx__back" data-area="">' + t('map.backto') + '</button>' +
-        '<h4>' + t('map.allareas') + '</h4><p>' + rows.length + ' listing' + (rows.length === 1 ? '' : 's') +
-        (term ? ' matching “' + esc(term) + '”' : '') + '</p></div>' + sideList(rows, 200);
+        '<h4>' + t('map.allareas') + '</h4>' +
+        (term ? '<p>' + mapMatchText(term) + '</p>' : '') + '</div>' + sideList(rows, 200);
       side.scrollTop = 0;
       return;
     }
@@ -1163,15 +1181,14 @@
     located.forEach(function (p) { var a = areaOf(p.fsa); areas[a] = (areas[a] || 0) + 1; });
     var akeys = Object.keys(areas).sort(function (a, b) { return areas[b] - areas[a]; });
     side.innerHTML = '<div class="ottrx__mapsidehead"><h4>' + t('map.choose') + '</h4>' +
-      '<p>' + rows.length + ' listing' + (rows.length === 1 ? '' : 's') +
-      (term ? ' matching “' + esc(term) + '”' : '') + '. ' + t('map.choosehint') + '</p></div>' +
+      '<p>' + (term ? mapMatchText(term) + '. ' : '') + t('map.choosehint') + '</p></div>' +
       (rows.length ? '<button type="button" class="ottrx__areabtn ottrx__areabtn--all" data-showall="1">' +
-        t('map.showall') + ' ' + rows.length + ' ' + (rows.length === 1 ? t('listing') : t('listings')) + '</button>' : '') +
+        t('map.showall') + ' ' + t('listings') + '</button>' : '') +
       (unplaced.length ? '<button type="button" class="ottrx__areabtn ottrx__areabtn--unplaced" data-unplaced="1">' +
-        '<span>' + t('map.showunplaced') + '</span><span class="ottrx__arean">' + unplaced.length + '</span></button>' : '') +
+        '<span>' + t('map.showunplaced') + '</span></button>' : '') +
       (akeys.length ? akeys.map(function (a) {
         return '<button type="button" class="ottrx__areabtn" data-area="' + esc(a) + '">' +
-               '<span>' + esc(a) + ' Ottawa</span><span class="ottrx__arean">' + areas[a] + '</span></button>';
+               '<span>' + esc(a) + ' Ottawa</span></button>';
       }).join('') : '<div class="ottrx__hit"><p class="ottrx__hitmeta">' + t('map.nolistings') + '</p></div>');
     side.scrollTop = 0;
   }
@@ -1192,7 +1209,7 @@
         radius: Math.max(9, Math.min(34, 7 + Math.sqrt(total) * 3.1)),
         color: '#fff', weight: 2, fillColor: dominant, fillOpacity: .78
       }).addTo(mapState.layer)
-        .bindTooltip(g.name + ' — ' + total, { direction: 'top' })
+        .bindTooltip(g.name, { direction: 'top' })
         .on('click', function () {
           mapState.fsa = fsa;
           mapState.area = (DATA.fsaGeo[fsa] || {}).area || null;
@@ -1249,12 +1266,11 @@
     });
     var h = '<div class="ottrx__warn">' + t('map.fail') + '</div>';
     h += '<div class="ottrx__tablewrap ottrx__tablewrap--stack"><table class="ottrx__table">' +
-      '<thead><tr><th scope="col">' + t('col.area') + '</th><th scope="col">' + t('col.district') + '</th><th scope="col">' + t('col.listings') + '</th></tr></thead><tbody>';
+      '<thead><tr><th scope="col">' + t('col.area') + '</th><th scope="col">' + t('col.district') + '</th></tr></thead><tbody>';
     Object.keys(byArea).sort().forEach(function (a) {
       Object.keys(byArea[a]).sort().forEach(function (f) {
         h += '<tr><td data-th="Area">' + esc(a) + '</td>' +
-             '<td data-th="Postal district">' + esc(f) + ' &mdash; ' + esc(DATA.fsaGeo[f].name) + '</td>' +
-             '<td data-th="Listings" class="num">' + byArea[a][f] + '</td></tr>';
+             '<td data-th="Postal district">' + esc(f) + ' &mdash; ' + esc(DATA.fsaGeo[f].name) + '</td></tr>';
       });
     });
     return h + '</tbody></table></div>';
@@ -1279,15 +1295,7 @@
       }).join('') + '</div>';
   }
 
-  function mapCountText(n, q) {
-    var bits = [];
-    if (mapState.q) bits.push('“' + esc(mapState.qLabel || mapState.q) + '”');
-    if (q) bits.push('“' + esc(q) + '”');
-    return n + ' ' + t('map.shown') + (bits.length ? ' ' + t('matching') + ' ' + bits.join(LANG === 'fr' ? ' et ' : ' and ') : '');
-  }
-
   function renderMap(q) {
-    var rows = mapFiltered(q);
     var h = '<div class="ottrx__panelhead"><h2 class="ottrx__h2">' + t('map.title') + '</h2></div>';
     h += '<div class="ottrx__mapsearchwrap">' +
       '<svg class="ottrx__searchicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
@@ -1304,9 +1312,7 @@
         'aria-label="' + t('map.suggestaria') + '"></ul>' +
       '<p class="ottrx__sr" aria-live="polite" data-suggestlive></p></div>';
 
-    h += '<div class="ottrx__maptools">' + segHtml(q) +
-      '<span class="ottrx__status" style="margin:0" data-mapcount>' + mapCountText(rows.length, q) +
-      '</span></div>';
+    h += '<div class="ottrx__maptools">' + segHtml(q) + '</div>';
 
 
     if (mapState.failed) return h + areaFallback(q);
@@ -1549,7 +1555,7 @@
     e.list.hidden = false;
     e.input.setAttribute('aria-expanded', 'true');
     sgPaint();
-    if (e.live) e.live.textContent = sgItems.length + ' ' + t('map.suggestcount');
+    if (e.live) e.live.textContent = t('map.suggestcount');
     e.list.scrollTop = 0;
   }
   function sgPick(name) {
@@ -1574,8 +1580,6 @@
     if (mapState.failed || !mapState.map) { render(); return; }
     drawMarkers(state.q);
     renderSide(state.q);
-    var cnt = panelEl.querySelector('[data-mapcount]');
-    if (cnt) cnt.innerHTML = mapCountText(mapFiltered(state.q).length, state.q);
     var cl = panelEl.querySelector('[data-mapclear]');
     if (cl) cl.classList.toggle('is-on', !!mapState.q);
   }
