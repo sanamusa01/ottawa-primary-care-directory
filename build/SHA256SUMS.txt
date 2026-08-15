@@ -1,4 +1,4 @@
-87e7fe05a169d18815a8fa6f69728e9d554da737f324c33fc0d553effe21b0fd  ottawa-directory-presentation-adapter-2.1.6.zip
-854a68d50c6a8446bc61f1ad935fc163e34be332e102167e22cdf4f2d99bd67d  ottawa-primary-care-directory-hybrid-handoff-2026-08-14.zip
+f5f28dd612f8010bc253e7941e9d704776fb52ea64177218f42f6c22d23297fb  ottawa-directory-presentation-adapter-2.2.0.zip
+27ce11636c44880b88d6d2707100d8678230fe721badbfa197e3824752f9ebf5  ottawa-primary-care-directory-hybrid-handoff-2026-08-14.zip
 de68ee7eabe13f2e2f965b7e0cfaf797ee2c2cae5c4c5610a9e3803823c38da6  rollback-ottawa-primary-care-directory-1.0.0.zip
 be51d8514022a54bcb57ddb74ff2611aa0a5fd1f37f1e1fc7a179b030c8332f6  ottawa-primary-care-directory-bdp-migration-2026-08-14.zip

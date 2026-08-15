@@ -2,7 +2,7 @@
 
 Current deployable adapter:
 
-- `ottawa-directory-presentation-adapter-2.1.6.zip`
+- `ottawa-directory-presentation-adapter-2.2.0.zip`
 
 Current complete developer handoff:
 
