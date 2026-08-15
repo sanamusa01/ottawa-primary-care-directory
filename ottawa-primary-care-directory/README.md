@@ -28,6 +28,9 @@ published in the directory.
   records that cannot be placed honestly on a physical map
 - Specialist roster with specialty and language filters
 - Clinics and services with section, category, location, and OHT filters
+- Count-free Map controls and marker labels; map totals remain internal QA data
+- Separated website/Champlainhealthline actions and compact, labelled access to
+  complete eligibility and hours in Clinics & Services
 - Fax lookup
 - Forms
 - Resources category explorer with compact group disclosures and return navigation

@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.3.2 — 2026-08-14
+
+- Improved Clinics & Services column sizing and separated the listing name,
+  website, and Champlainhealthline actions visually.
+- Renamed the public source action to **View on Champlainhealthline**.
+- Kept fees visible while placing complete eligibility and hours in a compact,
+  labelled disclosure so long source records no longer create oversized empty
+  table cells.
+- Removed all remaining public aggregate record totals from Map status text,
+  area/district controls, overflow notices, fallbacks, and marker tooltips while
+  retaining the counts in the read-only data layer.
+- Replaced dash separators in Referral Route and Resource titles with colon
+  punctuation at presentation time; stored records and URLs are unchanged.
+
 ## 2.3.1 — 2026-08-14
 
 - Normalized source double hyphens in public display text while retaining the
