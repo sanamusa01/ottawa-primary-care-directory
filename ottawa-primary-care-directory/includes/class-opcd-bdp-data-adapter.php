@@ -15,7 +15,7 @@ defined( 'ABSPATH' ) || exit;
 final class OPCD_BDP_Data_Adapter {
 	const REST_NAMESPACE = 'opcd/v1';
 	const REST_ROUTE     = '/directory';
-	const CACHE_KEY      = 'opcd_bdp_directory_v2_2_0';
+	const CACHE_KEY      = 'opcd_bdp_directory_v2_3_1';
 	const CACHE_TTL      = 5 * MINUTE_IN_SECONDS;
 
 	/**
