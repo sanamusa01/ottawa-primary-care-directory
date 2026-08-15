@@ -91,7 +91,7 @@ def main() -> None:
         fail("Breakdance design-system adapter is missing")
     if php.count("add_shortcode( 'ottawa_primary_care_directory'") != 1:
         fail("Shortcode registration is missing or duplicated")
-    if "Version: 2.1.6" not in php or "Requires Plugins: business-directory-plugin" not in php:
+    if "Version: 2.2.0" not in php or "Requires Plugins: business-directory-plugin" not in php:
         fail("Hybrid plugin version or Business Directory dependency is missing")
     if "rest_url( OPCD_BDP_Data_Adapter::REST_NAMESPACE" not in php:
         fail("Shortcode is not connected to the Business Directory data adapter")
@@ -107,6 +107,25 @@ def main() -> None:
         fail("Complete published-listing map coverage is missing")
     if "DATA.mapRows" not in javascript or "data-unplaced" not in javascript:
         fail("Map cannot expose located and unplaced records")
+    if "scope: 'all'" not in javascript or "['all','ottawa','away']" not in javascript:
+        fail("Clinics & Services must default to an explicit All locations option")
+    if "if (!state.svc && seenRows[r.id]) return;" not in javascript:
+        fail("All-section service rendering does not de-duplicate multi-category records")
+    if '<span class="ottrx__suggestn"' in javascript or '<span class="ottrx__segn"' in javascript:
+        fail("Map filter result counts are still exposed in the interface")
+    if "t('map.blurb')" in javascript or "t('map.searchable')" in javascript:
+        fail("Map coverage-count statement is still rendered in the interface")
+    if any(f"count: DATA.meta.{key}" in javascript for key in ("specCount", "svcCount", "faxCount")):
+        fail("Specialist, service, or fax totals are still shown in tab labels")
+    if "DATA.meta.specCount + ' ' + t('spec.blurb')" in javascript:
+        fail("Specialist aggregate count is still displayed in the panel header")
+    if "if (q || state.svc || state.leaf || state.scope !== 'all')" not in javascript:
+        fail("Unfiltered Clinics & Services aggregate count is still displayed")
+    if '<span class="n">' in template:
+        fail("Static template still shows tab totals before JavaScript loads")
+    danielle = [row for row in specialist_rows if row.get("_cpso") == "75041"]
+    if len(danielle) != 1 or danielle[0].get("name") != "Dr. Danielle Gervais":
+        fail("Danielle Gervais must appear exactly once without a middle name")
     if re.search(r"register_rest_route[\s\S]{0,500}WP_REST_Server::(?:CREATABLE|EDITABLE|DELETABLE)", adapter):
         fail("Adapter exposes a mutating REST route")
     if ".ottrx--wordpress .ottrx__lang{display:none}" in css:
