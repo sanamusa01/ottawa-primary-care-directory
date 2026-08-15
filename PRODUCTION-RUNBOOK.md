@@ -19,12 +19,12 @@ authorize production work; the production owner should execute it after review.
 1. Install and activate Business Directory Plugin.
 2. Apply every field and setting in `DEVELOPER-HANDOFF.md`.
 3. Run the seven-row pilot in **Test Import** mode; require 7 accepted / 0 rejected.
-4. Import the 3,519-row full CSV exactly once into an empty directory.
-5. Confirm the published total is 3,519 before changing the public page.
+4. Import the 3,520-row full CSV exactly once into an empty directory.
+5. Confirm the published total is 3,520 before changing the public page.
 
 ## 3. Install the presentation adapter
 
-1. Upload `build/ottawa-directory-presentation-adapter-2.1.6.zip`.
+1. Upload `build/ottawa-directory-presentation-adapter-2.2.0.zip`.
 2. Confirm WordPress reports Business Directory Plugin as its dependency.
 3. Activate **Ottawa Directory Presentation Adapter**.
 4. Request `/wp-json/opcd/v1/directory` and require HTTP 200,
@@ -49,8 +49,8 @@ authorize production work; the production owner should execute it after review.
 
 ## 5. Acceptance tests
 
-- Business Directory REST: HTTP 200 and `X-WP-Total: 3519`.
-- Adapter REST: HTTP 200; 785 unique specialists, 819 specialty appearances,
+- Business Directory REST: HTTP 200 and `X-WP-Total: 3520`.
+- Adapter REST: HTTP 200; 786 unique specialists, 820 specialty appearances,
   2,217 services, 49 routes, 9 intakes, 7 forms, 435 resources, 17 quick
   numbers, and 1,156 fax entries.
 - Parent header/footer and Ottawa styling appear on `/business-directory/`.
@@ -58,16 +58,23 @@ authorize production work; the production owner should execute it after review.
   Clinics & Services, Fax Lookup, Forms, Resources, Quick Numbers.
 - Search `Mitra Abaeian` returns one result with `613 830-1771`.
 - Fax search `613-737-8944` returns Eastern Ontario MRI Central Intake.
-- Map shows Ottawa postal-district circles, area counts, filtering, directions,
+- Map shows Ottawa postal-district circles, filtering, directions,
   Leaflet attribution, and OpenStreetMap attribution.
-- Map reports 3,519 searchable listings, with 2,582 represented by supported
+- Adapter metadata reports 3,520 searchable listings, with 2,583 represented by supported
   public postal-location markers and 937 in the separate no-public-location
   results group.
-- Typing `abortion` offers **All matching listings for “abortion” — 20** as the
-  first suggestion and keeps **All 20** selected after clicking it.
+- Typing `abortion` offers **All matching listings for “abortion”** as the first
+  suggestion without a visible count on its right; clicking it retains every
+  matching record.
 - Selecting **Pregnancy options & abortion — what each service states** shows
   14 results: 11 mapped and 3 explicitly listed without a public map location.
 - Specialist specialty/language and service section/category/location filters work.
+- Clinics & Services defaults to **All locations**, shows all 2,217 unique
+  records, and retains the narrower Ottawa-only and outside-Ottawa choices.
+- Specialist, Clinics & Services, and Fax Lookup tab labels do not expose
+  totals; the unfiltered specialist/service panels do not repeat aggregate
+  totals either.
+- `Dr. Danielle Gervais` returns one Family Medicine record with no middle name.
 - English/French interface controls work; `/fr/business-directory/` retains the
   French parent navigation.
 - Feedback links open a correction email that warns against patient information.

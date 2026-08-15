@@ -7,7 +7,7 @@ The active architecture deliberately separates content management from public
 presentation:
 
 - [Business Directory Plugin](https://wordpress.org/plugins/business-directory-plugin/)
-  owns the 3,519 editable WordPress listings, categories, fields, permissions,
+  owns the 3,520 editable WordPress listings, categories, fields, permissions,
   and CSV import/export.
 - `ottawa-primary-care-directory/` is a read-only presentation adapter that
   restores the purpose-built Ottawa directory interface while reading current
@@ -18,10 +18,10 @@ presentation:
 ## Current staging integration
 
 - Business Directory Plugin: **6.4.26**, active with automatic updates enabled
-- Ottawa Directory Presentation Adapter: **2.1.6**, active
+- Ottawa Directory Presentation Adapter: **2.2.0**, active
 - Public page shortcode: `[ottawa_primary_care_directory]`
 - Public URL: `/business-directory/`
-- Published WordPress listings: **3,519**
+- Published WordPress listings: **3,520**
 - Read-only presentation endpoint: `/wp-json/opcd/v1/directory`
 - Production site: unchanged
 
@@ -29,7 +29,7 @@ presentation:
 
 - Search Everything
 - Referral Routes and central intake
-- Complete map search across all 3,519 published records, with postal-district
+- Complete map search across all 3,520 published records, with postal-district
   markers, service filtering, directions, and a separate transparent list for
   online, confidential-location, or addressless records
 - Specialist roster with specialty and language filters
@@ -78,21 +78,21 @@ generated `sequence_id` values, edit that export, and re-import it.
 
 | Type | Published WordPress listings |
 |---|---:|
-| Specialists | 785 |
+| Specialists | 786 |
 | Clinics & services | 2,217 |
 | Referral routes | 49 |
 | Central intakes | 9 |
 | Forms | 7 |
 | Resources | 435 |
 | Quick numbers | 17 |
-| **Total** | **3,519** |
+| **Total** | **3,520** |
 
-The designed specialist roster has 819 specialty appearances for 785 unique
+The designed specialist roster has 820 specialty appearances for 786 unique
 physicians because some physicians belong to multiple specialty groups. The
 fax lookup contains 1,151 service fax entries plus five separately verified
 intake/form destinations.
 
-The Map tab searches all 3,519 published records. Of those, 2,582 have a
+The Map tab searches all 3,520 published records. Of those, 2,583 have a
 supported public postal location and appear in district markers; 937 remain
 searchable under **records without a public map location**. This avoids both
 missing resources and inventing locations for confidential or online services.

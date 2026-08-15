@@ -7,8 +7,8 @@ Staging directory: https://wordpress-403092-6560255.cloudwaysapps.com/business-d
 ## Final state
 
 - Content engine: **Business Directory Plugin 6.4.26**, active
-- Presentation: **Ottawa Directory Presentation Adapter 2.1.6**, active
-- Published listings: **3,519**
+- Presentation: **Ottawa Directory Presentation Adapter 2.2.0**, active
+- Published listings: **3,520**
 - Public page ID: `1941`
 - Public shortcode: `[ottawa_primary_care_directory]`
 - Adapter endpoint: `/wp-json/opcd/v1/directory`
@@ -22,7 +22,8 @@ Staging directory: https://wordpress-403092-6560255.cloudwaysapps.com/business-d
 3. Configured published defaults, 25 listings/page, comments off, directory
    labels, administrator-only content changes, no public Submit/Manage buttons,
    and no listing-owner contact form.
-4. Generated and imported the latest 3,519-record Monica dataset.
+4. Generated and imported the latest 3,519-record Monica dataset, then added
+   the verified Danielle Gervais record for a current total of 3,520.
 5. Created a Breakdance single-listing template for direct Business Directory
    detail URLs.
 6. Initially tested the plugin's standard `[businessdirectory]` output; it
@@ -49,6 +50,13 @@ Staging directory: https://wordpress-403092-6560255.cloudwaysapps.com/business-d
 15. Added conservative location matching, the verified adjacent J8Z district,
     and an explicit all-matches autocomplete choice so narrow legacy category
     labels do not hide broader search results.
+16. Made **All locations** the Clinics & Services default so all 2,217 unique
+    records appear unless an administrator deliberately narrows the scope.
+17. Removed public tab totals, unfiltered specialist/service aggregate totals,
+    map segment totals, autocomplete totals, and the map coverage-count
+    paragraph while retaining the underlying records.
+18. Added `Dr. Danielle Gervais` to Family Medicine using the public CPSO
+    register fields requested for the existing physician-card format.
 
 No paid module, Google Maps key, user account, unrelated page, footer, or
 production site was changed.
@@ -57,8 +65,8 @@ production site was changed.
 
 | Item | Count |
 |---|---:|
-| Unique specialists | 785 |
-| Specialist specialty appearances | 819 |
+| Unique specialists | 786 |
+| Specialist specialty appearances | 820 |
 | Clinics & services | 2,217 |
 | Referral routes | 49 |
 | Central intakes | 9 |
@@ -66,25 +74,29 @@ production site was changed.
 | Resources | 435 |
 | Quick numbers | 17 |
 | Fax lookup | 1,156 |
-| Published WordPress listings | 3,519 |
+| Published WordPress listings | 3,520 |
 
 ## Verification results
 
-- Business Directory REST total: 3,519.
+- Business Directory REST total: 3,520.
 - Adapter REST: HTTP 200, expected counts, read-only GET, published records only.
 - Parent header/footer and design tokens render correctly.
 - Search `Mitra Abaeian`: one result with correct specialty, location, and phone.
-- Map: all 3,519 published listings are searchable; 2,582 listings with
+- Map: all 3,520 published listings are searchable; 2,583 listings with
   supported public postal locations contribute to postal-district markers and
   937 appear in the separate no-public-location result group.
 - Map search `abortion`: first suggestion is **All matching listings for
-  “abortion” — 20**; selecting it leaves All 20 active (16 mapped and 4 without
-  a public map location).
+  “abortion”** with no count at the right; selecting it retains the full result
+  set (16 mapped and 4 without a public map location).
 - Curated category **Pregnancy options & abortion — what each service states**:
   14 results, with 11 mapped and 3 transparently listed without a public map
   location.
-- Specialists: 785 unique physicians, 819 specialty appearances, 39 populated
+- Specialists: 786 unique physicians, 820 specialty appearances, 39 populated
   groups, specialty and language filters.
+- Clinics & Services: **All locations** is the default and returns all 2,217
+  unique records; Ottawa-only and outside-Ottawa filters remain available.
+- `Dr. Danielle Gervais`: one published Family Medicine record, with no middle
+  name displayed.
 - Fax `613-737-8944`: Eastern Ontario MRI Central Intake.
 - Forms, Resources, Quick Numbers, feedback links, and English/French controls work.
 - Browser console: no errors or warnings during final interaction tests.
