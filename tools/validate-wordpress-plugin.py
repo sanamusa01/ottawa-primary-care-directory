@@ -91,7 +91,7 @@ def main() -> None:
         fail("Breakdance design-system adapter is missing")
     if php.count("add_shortcode( 'ottawa_primary_care_directory'") != 1:
         fail("Shortcode registration is missing or duplicated")
-    if "Version: 2.3.1" not in php or "Requires Plugins: business-directory-plugin" not in php:
+    if "Version: 2.3.2" not in php or "Requires Plugins: business-directory-plugin" not in php:
         fail("Hybrid plugin version or Business Directory dependency is missing")
     if "rest_url( OPCD_BDP_Data_Adapter::REST_NAMESPACE" not in php:
         fail("Shortcode is not connected to the Business Directory data adapter")
@@ -131,6 +131,18 @@ def main() -> None:
         fail("Clinics & Services still exposes the long Full details disclosure")
     if "replace(/(^|[^-])\\s*--\\s*([^-]|$)/g, '$1 – $2')" not in javascript:
         fail("Public double-hyphen punctuation normalization is missing")
+    if "function titleText" not in javascript or "t('ref.route') + ' ' + esc(r.n) + ': '" not in javascript:
+        fail("Public referral and resource titles are not using clean title punctuation")
+    if "View on Champlainhealthline" not in javascript or "Healthline record" in javascript:
+        fail("Champlainhealthline source labels are not consistent")
+    if "ottrx__table--services" not in javascript or "ottrx__service-links" not in css:
+        fail("Clinics & Services spacing treatment is missing")
+    if "ottrx__service-secondary" not in javascript or "if (r.elig)" not in javascript or "if (r.hours)" not in javascript:
+        fail("Clinics & Services eligibility and hours are not preserved in the compact layout")
+    if "data-mapcount" in javascript or "mapCountText" in javascript or "ottrx__arean" in javascript:
+        fail("Map aggregate listing totals are still exposed in the interface")
+    if ".bindTooltip(g.name + ' — ' + total" in javascript:
+        fail("Map marker tooltips still expose listing totals")
     allied = [row for row in data["svcRows"] if row.get("_src") == "Google Docs — Ressource list — Allied Health tabs"]
     if len(allied) != 59 or any(row.get("healthline") is not False for row in allied):
         fail("Allied Health additions are incomplete or incorrectly labelled as Healthline records")
