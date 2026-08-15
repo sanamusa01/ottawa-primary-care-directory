@@ -2,11 +2,11 @@
 
 Current deployable adapter:
 
-- `ottawa-directory-presentation-adapter-2.2.0.zip`
+- `ottawa-directory-presentation-adapter-2.3.1.zip`
 
 Current complete developer handoff:
 
-- `ottawa-primary-care-directory-hybrid-handoff-2026-08-14.zip`
+- `ottawa-primary-care-directory-hybrid-handoff-2.3.1.zip`
 
 Rollback:
 
